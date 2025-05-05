@@ -4,7 +4,7 @@ import { parseOBJ } from "./objParser.js";
 
 var gl;
 var meshProgramInfo;
-var cameraPosition = [0, 5, 10];
+var cameraPosition = [100, 100, 100];
 var cameraTarget = [0, 0, 0];
 var zNear = 0.1;
 var zFar = 1000;
@@ -84,7 +84,7 @@ window.onload = async function init() {
   gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
   try {
-    const meshes = await loadOBJ("/src/box.obj");
+    const meshes = await loadOBJ("/src/spider.obj");
     render(meshes);
   } catch (error) {
     console.error("OBJ 파일을 로드 에러 : ", error);
