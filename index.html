@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <title>관절연구소</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 vPosition;
+        attribute vec3 vNormal;
+        attribute vec2 vTexCoord;
+        attribute vec3 vColor;
+
+        uniform mat4 uWorld;
+        uniform mat4 uView;
+        uniform mat4 uProjection;
+
+        varying vec3 fNormal;
+        varying vec3 fPosition;
+        varying vec2 fTexCoord;
+        varying vec3 fColor;
+
+        void main() {
+            vec4 worldPosition = uWorld * vec4(vPosition, 1.0);
+            fPosition = worldPosition.xyz;
+            fNormal = mat3(uWorld) * vNormal;
+            fTexCoord = vTexCoord;
+            fColor = vColor;
+            gl_Position = uProjection * uView * worldPosition;
+            gl_PointSize = 10.0;
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        varying vec3 fNormal;
+        varying vec3 fPosition;
+        varying vec2 fTexCoord;
+        varying vec3 fColor;
+
+        uniform vec3 uLightDirection;
+        uniform vec4 uDiffuse;
+
+        void main() {
+            vec3 normal = normalize(fNormal);
+            float light = dot(normal, normalize(uLightDirection));
+            light = max(light, 0.0);
+
+            vec3 color = fColor * uDiffuse.rgb * light;
+            gl_FragColor = vec4(color, uDiffuse.a);
+        }
+    </script>
+
+    <script type="text/javascript" src="common/webgl-utils.js"></script>
+    <script type="text/javascript" src="common/initShaders.js"></script>
+    <script type="text/javascript" src="common/m4.js"></script>
+    <script type="module" src="main.js"></script>
+</head>
+
+<body>
+<div id="container">
+    <canvas height="1024" id="gl-canvas" width="1024"></canvas>
+    <div id="cam">
+        <div><strong>Camera</strong></div>
+        <hr>
+        Eye:<br>
+        x: <label for="eyeX"></label><input id="eyeX" readonly type="number" value="10"><br>
+        y: <label for="eyeY"></label><input id="eyeY" readonly type="number" value="10"><br>
+        z: <label for="eyeZ"></label><input id="eyeZ" readonly type="number" value="10"><br>
+        <hr>
+        At:<br>
+        x: <label for="atX"></label><input id="atX" readonly type="number" value="0"><br>
+        y: <label for="atY"></label><input id="atY" readonly type="number" value="0"><br>
+        z: <label for="atZ"></label><input id="atZ" readonly type="number" value="0"><br>
+        <hr>
+        Up:<br>
+        x: <label for="upX"></label><input id="upX" readonly type="number" value="0"><br>
+        y: <label for="upY"></label><input id="upY" readonly type="number" value="1"><br>
+        z: <label for="upZ"></label><input id="upZ" readonly type="number" value="0"><br>
+    </div>
+    <div id="model">
+        <div><strong>Spider</strong></div>
+        <hr>
+        Position:<br>
+        x: <label for="posX"></label><input id="posX" readonly type="number" value="0"><br>
+        y: <label for="posY"></label><input id="posY" readonly type="number" value="0"><br>
+        z: <label for="posZ"></label><input id="posZ" readonly type="number" value="0"><br>
+        <hr>
+        Scale:<br>
+        x: <label for="scaleX"></label><input id="scaleX" readonly type="number" value="1"><br>
+        y: <label for="scaleY"></label><input id="scaleY" readonly type="number" value="1"><br>
+        z: <label for="scaleZ"></label><input id="scaleZ" readonly type="number" value="1"><br>
+        <hr>
+        Rotation:<br>
+        x: <label for="rotX"></label><input id="rotX" readonly type="number" value="0"><br>
+        y: <label for="rotY"></label><input id="rotY" readonly type="number" value="0"><br>
+        z: <label for="rotZ"></label><input id="rotZ" readonly type="number" value="0"><br>
+    </div>
+    <div id="controller">
+        <div><strong>Controller</strong></div>
+        <hr>
+        Position:<br>
+        x: <label for="controllerX"></label><input id="controllerX" readonly type="number" value="0"><br>
+        y: <label for="controllerY"></label><input id="controllerY" readonly type="number" value="0"><br>
+        z: <label for="controllerZ"></label><input id="controllerZ" readonly type="number" value="0"><br>
+    </div>
+</div>
+</body>
+</html>
