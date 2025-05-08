@@ -2,7 +2,10 @@ let meshProgramInfo;
 let viewMatrix;
 let projectionMatrix;
 
-export function initRenderer(gl, program, eye, at) {
+export function initRenderer(gl, eye, at) {
+    const program = initShaders(gl, "vertex-shader", "fragment-shader");
+    gl.useProgram(program);
+
     meshProgramInfo = {
         program,
         attribLocations: {
@@ -26,10 +29,32 @@ export function initRenderer(gl, program, eye, at) {
     viewMatrix = m4.inverse(cameraMatrix);
     projectionMatrix = m4.perspective(Math.PI / 4, aspect, 0.1, 1000);
 
+    gl.clearColor(0.2, 0.2, 0.2, 1.0);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK);
+
+    // Initial viewport and resize handling
+    function resize() {
+        const canvas = gl.canvas;
+        // Resize canvas drawing buffer to match displayed size
+        if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        // Recompute projection matrix with new aspect
+        const aspect = canvas.clientWidth / canvas.clientHeight;
+        projectionMatrix = m4.perspective(Math.PI / 4, aspect, 0.1, 1000);
+    }
+
+    // Set up resize listener and call once
+    window.addEventListener("resize", resize);
+    resize();
+
     return {viewMatrix, projectionMatrix};
 }
 
-export function renderScene(gl, meshes, time, objOffset = [0, 0, 0]) {
+export function renderScene(gl, scene, time, objOffset = [0, 0, 0]) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_view, false, viewMatrix);
@@ -39,12 +64,9 @@ export function renderScene(gl, meshes, time, objOffset = [0, 0, 0]) {
 
     gl.enable(gl.DEPTH_TEST);
 
-    for (const mesh of meshes) {
+    for (const mesh of scene.meshes) {
         gl.useProgram(meshProgramInfo.program);
         let worldMatrix = mesh.transform || m4.identity();
-        if (mesh.name === 'spider') {
-            worldMatrix = m4.multiply(worldMatrix, m4.scaling(0.1, 0.1, 0.1));
-        }
         gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, worldMatrix);
 
         bindAttrib(gl, mesh.buffers.position, meshProgramInfo.attribLocations.a_position, 3);

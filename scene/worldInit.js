@@ -1,5 +1,5 @@
 export function createGround(gl) {
-    const size = 50;
+    const size = 0;
     const positions = [
         -size, 0, -size,
         size, 0, -size,
