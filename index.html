@@ -41,13 +41,18 @@
 
         uniform vec3 uLightDirection;
         uniform vec4 uDiffuse;
+        uniform vec3 uAmbient;
 
         void main() {
             vec3 normal = normalize(fNormal);
             float light = dot(normal, normalize(uLightDirection));
             light = max(light, 0.0);
 
-            vec3 color = fColor * uDiffuse.rgb * light;
+            vec3 diffuseTerm = light * uDiffuse.rgb;
+            vec3 ambientTerm = uAmbient;
+            vec3 lit = diffuseTerm + ambientTerm;
+
+            vec3 color = fColor * lit;
             gl_FragColor = vec4(color, uDiffuse.a);
         }
     </script>
@@ -65,45 +70,45 @@
         <div><strong>Camera</strong></div>
         <hr>
         Eye:<br>
-        x: <label for="eyeX"></label><input id="eyeX" readonly type="number" value="10"><br>
-        y: <label for="eyeY"></label><input id="eyeY" readonly type="number" value="10"><br>
-        z: <label for="eyeZ"></label><input id="eyeZ" readonly type="number" value="10"><br>
+        x: <span id="eyeX">100</span><br>
+        y: <span id="eyeY">100</span><br>
+        z: <span id="eyeZ">100</span><br>
         <hr>
         At:<br>
-        x: <label for="atX"></label><input id="atX" readonly type="number" value="0"><br>
-        y: <label for="atY"></label><input id="atY" readonly type="number" value="0"><br>
-        z: <label for="atZ"></label><input id="atZ" readonly type="number" value="0"><br>
+        x: <span id="atX">0</span><br>
+        y: <span id="atY">0</span><br>
+        z: <span id="atZ">0</span><br>
         <hr>
         Up:<br>
-        x: <label for="upX"></label><input id="upX" readonly type="number" value="0"><br>
-        y: <label for="upY"></label><input id="upY" readonly type="number" value="1"><br>
-        z: <label for="upZ"></label><input id="upZ" readonly type="number" value="0"><br>
+        x: <span id="upX">0</span><br>
+        y: <span id="upY">1</span><br>
+        z: <span id="upZ">0</span><br>
     </div>
     <div id="model">
         <div><strong>Spider</strong></div>
         <hr>
         Position:<br>
-        x: <label for="posX"></label><input id="posX" readonly type="number" value="0"><br>
-        y: <label for="posY"></label><input id="posY" readonly type="number" value="0"><br>
-        z: <label for="posZ"></label><input id="posZ" readonly type="number" value="0"><br>
+        x: <span id="posX">0</span><br>
+        y: <span id="posY">0</span><br>
+        z: <span id="posZ">0</span><br>
         <hr>
         Scale:<br>
-        x: <label for="scaleX"></label><input id="scaleX" readonly type="number" value="1"><br>
-        y: <label for="scaleY"></label><input id="scaleY" readonly type="number" value="1"><br>
-        z: <label for="scaleZ"></label><input id="scaleZ" readonly type="number" value="1"><br>
+        x: <span id="scaleX">1</span><br>
+        y: <span id="scaleY">1</span><br>
+        z: <span id="scaleZ">1</span><br>
         <hr>
         Rotation:<br>
-        x: <label for="rotX"></label><input id="rotX" readonly type="number" value="0"><br>
-        y: <label for="rotY"></label><input id="rotY" readonly type="number" value="0"><br>
-        z: <label for="rotZ"></label><input id="rotZ" readonly type="number" value="0"><br>
+        x: <span id="rotX">0</span><br>
+        y: <span id="rotY">0</span><br>
+        z: <span id="rotZ">0</span><br>
     </div>
     <div id="controller">
         <div><strong>Controller</strong></div>
         <hr>
         Position:<br>
-        x: <label for="controllerX"></label><input id="controllerX" readonly type="number" value="0"><br>
-        y: <label for="controllerY"></label><input id="controllerY" readonly type="number" value="0"><br>
-        z: <label for="controllerZ"></label><input id="controllerZ" readonly type="number" value="0"><br>
+        x: <span id="controllerX">0.00</span><br>
+        y: <span id="controllerY">0.00</span><br>
+        z: <span id="controllerZ">0.00</span><br>
     </div>
 </div>
 </body>
