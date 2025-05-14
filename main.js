@@ -6,7 +6,8 @@ import { createGround } from "./scene/worldInit.js";
 import { raycast } from "./utils/raycast.js";
 
 let gl;
-let m4;
+// let m4;
+let m4 = window.m4;
 const eye = [10, 10, 10];
 const at = [0, 0, 0];
 
