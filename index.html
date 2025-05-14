@@ -27,6 +27,7 @@
             fTexCoord = vTexCoord;
             fColor = vColor;
             gl_Position = uProjection * uView * worldPosition;
+            gl_PointSize = 10.0;
         }
     </script>
 
@@ -40,13 +41,19 @@
 
         uniform vec3 uLightDirection;
         uniform vec4 uDiffuse;
+        uniform vec3 uAmbient;
 
         void main() {
             vec3 normal = normalize(fNormal);
             float light = dot(normal, normalize(uLightDirection));
             light = max(light, 0.0);
 
-            vec3 color = fColor * uDiffuse.rgb * light;
+            vec3 diffuseTerm = light * uDiffuse.rgb;
+            vec3 ambientTerm = uAmbient;
+            vec3 lit = diffuseTerm + ambientTerm;
+
+            vec3 color = fColor * lit;
+      
             gl_FragColor = vec4(color, uDiffuse.a);
         }
     </script>
@@ -58,7 +65,52 @@
 </head>
 
 <body>
-<canvas id="gl-canvas" width="1024" height="1024">
-</canvas>
+<div id="container">
+    <canvas height="1024" id="gl-canvas" width="1024"></canvas>
+    <div id="cam">
+        <div><strong>Camera</strong></div>
+        <hr>
+        Eye:<br>
+        x: <span id="eyeX">100</span><br>
+        y: <span id="eyeY">100</span><br>
+        z: <span id="eyeZ">100</span><br>
+        <hr>
+        At:<br>
+        x: <span id="atX">0</span><br>
+        y: <span id="atY">0</span><br>
+        z: <span id="atZ">0</span><br>
+        <hr>
+        Up:<br>
+        x: <span id="upX">0</span><br>
+        y: <span id="upY">1</span><br>
+        z: <span id="upZ">0</span><br>
+    </div>
+    <div id="model">
+        <div><strong>Spider</strong></div>
+        <hr>
+        Position:<br>
+        x: <span id="posX">0</span><br>
+        y: <span id="posY">0</span><br>
+        z: <span id="posZ">0</span><br>
+        <hr>
+        Scale:<br>
+        x: <span id="scaleX">1</span><br>
+        y: <span id="scaleY">1</span><br>
+        z: <span id="scaleZ">1</span><br>
+        <hr>
+        Rotation:<br>
+        x: <span id="rotX">0</span><br>
+        y: <span id="rotY">0</span><br>
+        z: <span id="rotZ">0</span><br>
+    </div>
+    <div id="controller">
+        <div><strong>Controller</strong></div>
+        <hr>
+        Position:<br>
+        x: <span id="controllerX">0.00</span><br>
+        y: <span id="controllerY">0.00</span><br>
+        z: <span id="controllerZ">0.00</span><br>
+    </div>
+</div>
 </body>
 </html>

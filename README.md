@@ -16,14 +16,14 @@ Joint-Research-Institute/
 │   └── webgl-utils.js       # WebGL 환경 설정
 ├── scene/                   # 씬 구성 / 렌더링 처리
 │   ├── renderer.js          # 렌더링 루프
-│   └── worldInit.js         # 지형 및 카메라 초기화
+│   └── worldInit.js         # 지형 초기화
 ├── robot/                   # 로봇 관련 로직
 │   ├── gait.js              # 애니메이션
 │   ├── ik.js                # IK
 │   └── robot.js             # 로봇 계층 구조
 ├── utils/                   # 기타 유틸
-│   ├── modelLoader.js       # .obj 모델 로드
-│   └── raycast.js           # (예정) 마우스 레이캐스팅
+│   ├── modelLoader.js       # .obj 로드
+│   └── raycast.js           # 마우스 레이캐스트
 ├── index.html               # HTML 진입점
 ├── main.js                  # 프로그램 메인 초기화 / 실행 루프
 ├── style.css                # 스타일
