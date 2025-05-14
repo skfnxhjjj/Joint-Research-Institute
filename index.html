@@ -53,6 +53,7 @@
             vec3 lit = diffuseTerm + ambientTerm;
 
             vec3 color = fColor * lit;
+      
             gl_FragColor = vec4(color, uDiffuse.a);
         }
     </script>

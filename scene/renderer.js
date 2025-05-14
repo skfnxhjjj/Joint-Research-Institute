@@ -72,7 +72,6 @@ export function renderScene(gl, scene) {
         gl.useProgram(meshProgramInfo.program);
         let worldMatrix = mesh.transform || m4.identity();
         gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, worldMatrix);
-
         bindAttrib(gl, mesh.buffers.position, meshProgramInfo.attribLocations.a_position, 3);
         bindAttrib(gl, mesh.buffers.normal, meshProgramInfo.attribLocations.a_normal, 3);
         bindAttrib(gl, mesh.buffers.texcoord, meshProgramInfo.attribLocations.a_texcoord, 2);
