@@ -1,0 +1,77 @@
+<!-- 
+
+Fabrik 솔버 테스트 05.15 작성
+하단에 코멘트 남겨놨습니다! 또는 utils/fabrikSolver.js를 참고하시면 됩니다!
+3D로 테스트하려니 제가 구현하다가 막혀서 2D로 테스트 했습니다. 따라서 Z값을 모두 0으로 사용했습니다.
+
+-->
+
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Fabrik 테스트</title>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas" width="600" height="600"></canvas>
+      <button id="nextStepBtn">스텝 진행</button>
+    </div>
+
+    <script src="../common/m4.js"></script>
+    <script type="module">
+      import { FabrikSolver } from "../utils/fabrikSolver.js";
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const stepBtn = document.getElementById("nextStepBtn");
+
+
+        // FabrikSolver(baseX(초기 X), baseY(초기 Y), baseZ(초기 Z), marginOfError(오차 -> 이게 작아지면 더 정확해집니다))
+        const solver = new FabrikSolver(10, 10, 0, 0.001);
+        
+        // solver.addSegment(80, 0, 0);  관절을 추가할 수 있습니다. 첫번째부터 길이, Z축 각도, Y축 각도를 의미합니다.
+        solver.addSegment(80, 0, 0);
+        solver.addSegment(60, 0, 0);
+        solver.addSegment(100, 0, 0);
+
+        const target = [150, 150, 0]; // 여기서 타겟을 바꿔서 테스트할 수 있습니다!
+        let finishFlag = false;
+
+        function drawArm() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.beginPath();
+          ctx.moveTo(solver.basePoint[0], solver.basePoint[1]);
+          for (const seg of solver.segments) {
+            ctx.lineTo(seg.point[0], seg.point[1]);
+          }
+          ctx.strokeStyle = "black";
+          ctx.lineWidth = 4;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(target[0], target[1], 5, 0, Math.PI * 2);
+          ctx.fillStyle = "red";
+          ctx.fill();
+        }
+
+        stepBtn.addEventListener("click", () => {
+          if (!solver.inMarginOfError(...target)) {
+            solver.iterate(...target);
+            drawArm();
+          } else {
+            if (!finishFlag) {
+              alert("완료");
+              finishFlag = true;
+            }
+          }
+        });
+
+        drawArm();
+      });
+    </script>
+  </body>
+</html>
