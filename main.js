@@ -6,6 +6,7 @@ import { createGround } from "./scene/worldInit.js";
 import { raycast } from "./utils/raycast.js";
 
 let gl;
+let m4;
 const eye = [10, 10, 10];
 const at = [0, 0, 0];
 
@@ -17,7 +18,7 @@ let viewMatrix, projectionMatrix;
 
 window.onload = async function init() {
     const canvas = document.getElementById("gl-canvas");
-    gl = WebGLUtils.setupWebGL(canvas);
+    gl = WebGLUtils.setupWebGL(canvas, null);
     if (!gl) {
         alert("Failed to load WebGL");
         return;
