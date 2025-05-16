@@ -21,7 +21,7 @@ export function createGround(gl, size, divisions) {
                 x1, 0, z1
             );
 
-            const color = ((i + j) % 2 === 0) ? [1, 1, 1] : [0.8, 0.8, 0.8];
+            const color = ((i + j) % 2 === 0) ? [1.0, 1.0, 1.0, 1.0] : [0.8, 0.8, 0.8, 1.0];
             for (let k = 0; k < 6; k++) {
                 colors.push(...color);
                 normals.push(0, 1, 0);

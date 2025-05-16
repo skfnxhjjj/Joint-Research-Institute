@@ -1,13 +1,15 @@
 "use strict";
 
-import { loadOBJ } from "./utils/modelLoader.js";
-import { initRenderer, renderScene } from "./scene/renderer.js";
-import { createGround } from "./scene/worldInit.js";
-import { raycast } from "./utils/raycast.js";
+import {initRenderer, renderScene} from "./scene/renderer.js";
+import {SceneNode} from "./scene/SceneNode.js";
+import {createGround} from "./scene/worldInit.js";
+import {buildSpider} from "./robot/robot.js";
+import {raycast} from "./utils/raycast.js";
+import * as gait from "./robot/gait.js";
+import * as ik from "./robot/ik.js";
+import config from "./robot/robotConfig.js";
 
 let gl;
-// let m4;
-let m4 = window.m4;
 const eye = [10, 10, 10];
 const at = [0, 0, 0];
 
@@ -32,27 +34,25 @@ window.onload = async function init() {
     gl.clearColor(0.2, 0.2, 0.2, 1.0);
 
     try {
-        const ground = createGround(gl, ground_size, ground_divisions);
-        const spider = await loadOBJ(gl, "./assets/models/spider.obj");
-        spider.forEach(mesh => {
-            mesh.name = 'spider';
+        const groundMesh = createGround(gl, ground_size, ground_divisions);
+        const spiderRoot = await buildSpider(gl);
+
+        const sceneRoot = new SceneNode({name: "root"});
+        const groundNode = new SceneNode({
+            name: "ground",
+            mesh: groundMesh,
+            pivot: [0, 0, 0],
+            localMatrix: m4.identity()
         });
 
-        const scene = {
-            meshes: [],
-            addMesh(mesh) {
-                this.meshes.push(mesh);
-            }
-        };
-
-        scene.addMesh(ground);
-        spider.forEach(mesh => scene.addMesh(mesh));
+        sceneRoot.addChild(groundNode);
+        sceneRoot.addChild(spiderRoot);
 
         canvas.addEventListener("mousemove", e => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            const hit = raycast(gl, x, y, viewMatrix, projectionMatrix, ground);
+            const hit = raycast(gl, x, y, viewMatrix, projectionMatrix, groundMesh);
             if (hit) {
                 objOffset = hit.position;
                 document.getElementById('controllerX').textContent = hit.position[0].toFixed(2);
@@ -61,20 +61,36 @@ window.onload = async function init() {
             }
         });
 
-        function render() {
-            const [cx, cy, cz] = objOffset
+        function update(time) {
+            // Spider lookAt (yaw-only)
+            const [cx, , cz] = objOffset;
+            const yaw = Math.atan2(cx, cz);
+            spiderRoot.localMatrix = m4.multiply(
+                m4.translation(0, 2, 0),
+                m4.yRotation(yaw),
+                m4.scaling(config.scale, config.scale, config.scale),
+            );
 
-            const angleY = Math.atan2(cx, cz) - Math.PI / 2;
-            spider.forEach(mesh => {
-                mesh.transform = m4.multiply(
-                    m4.yRotation(angleY),
-                    m4.scaling(0.05, 0.05, 0.05)
-                );
-            });
-            renderScene(gl, scene);
-            requestAnimationFrame(render);
+            // Tripod gait and IK
+            const footTargets = gait.calculate(time);
+            ik.solve(spiderRoot, footTargets);
+
+            // Update the scene graph
+            sceneRoot.updateWorldMatrix();
         }
-        requestAnimationFrame(render);
+
+        function draw(time) {
+            renderScene(gl, sceneRoot);
+        }
+
+        function loop(now) {
+            const t = now * 0.001;
+            update(t);
+            draw(t);
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
     } catch (error) {
         console.error("Failed to load .obj: ", error);
     }
