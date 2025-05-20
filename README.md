@@ -1,4 +1,5 @@
 # 관절연구소
+
 Computer Graphics 조별 과제
 
 ## 📁 프로젝트 구조
@@ -16,12 +17,17 @@ Joint-Research-Institute/
 │   └── webgl-utils.js       # WebGL 환경 설정
 ├── scene/                   # 씬 구성 / 렌더링 처리
 │   ├── renderer.js          # 렌더링 루프
-│   └── worldInit.js         # 지형 초기화
+│   ├── worldInit.js         # 지형 초기화
+│   └── SceneNode.js         # SceneNode 클래스 정의
 ├── robot/                   # 로봇 관련 로직
-│   ├── gait.js              # 애니메이션
-│   ├── ik.js                # IK
-│   └── robot.js             # 로봇 계층 구조
+│   ├── gait.js              # 애니메이션 계획 생성
+│   ├── ik.js                # IK 적용
+│   ├── robot.js             # 로봇 계층 구조 / leg를 body의 자식으로 추가
+│   ├── robotConfig.js       # 로봇 config 설정
+│   ├── body.js              # body를 SceneNode로 생성
+│   └── leg.js               # Leg 클래스 정의
 ├── utils/                   # 기타 유틸
+│   ├── meshUtils.js         # 메쉬 타입에 따라 생성 / 불러오기
 │   ├── modelLoader.js       # .obj 로드
 │   └── raycast.js           # 마우스 레이캐스트
 ├── index.html               # HTML 진입점

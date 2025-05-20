@@ -8,6 +8,7 @@ import {raycast} from "./utils/raycast.js";
 import * as gait from "./robot/gait.js";
 import * as ik from "./robot/ik.js";
 import config from "./robot/robotConfig.js";
+import {createBoxMesh} from "./utils/meshUtils.js";
 
 let gl;
 const eye = [10, 10, 10];
@@ -44,9 +45,16 @@ window.onload = async function init() {
             pivot: [0, 0, 0],
             localMatrix: m4.identity()
         });
+        const controller = new SceneNode({
+            name: "controller",
+            mesh: createBoxMesh(gl, [0.1, 0.1, 0.1]),
+            pivot: [0, 0, 0],
+            localMatrix: m4.identity()
+        })
 
         sceneRoot.addChild(groundNode);
         sceneRoot.addChild(spiderRoot);
+        sceneRoot.addChild(controller);
 
         canvas.addEventListener("mousemove", e => {
             const rect = canvas.getBoundingClientRect();
@@ -71,6 +79,9 @@ window.onload = async function init() {
                 m4.scaling(config.scale, config.scale, config.scale),
             );
 
+            // Controller
+            controller.localMatrix = m4.translation(cx, 0, cz);
+
             // Tripod gait and IK
             const footTargets = gait.calculate(time);
             ik.solve(spiderRoot, footTargets);
@@ -79,14 +90,10 @@ window.onload = async function init() {
             sceneRoot.updateWorldMatrix();
         }
 
-        function draw(time) {
-            renderScene(gl, sceneRoot);
-        }
-
         function loop(now) {
             const t = now * 0.001;
             update(t);
-            draw(t);
+            renderScene(gl, sceneRoot);
             requestAnimationFrame(loop);
         }
 
