@@ -76,6 +76,14 @@ function renderNode(gl, node) {
         gl.useProgram(meshProgramInfo.program);
         gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, node.worldMatrix);
         const buf = node.mesh.buffers;
+        
+        // 버퍼 유효성 검사
+        if (!buf.position || !buf.normal || !buf.color) {
+            console.error("Required buffers missing for mesh:", node.name);
+            return;
+        }
+
+        // 버퍼 바인딩
         bindAttrib(gl, buf.position, meshProgramInfo.attribLocations.a_position, 3);
         bindAttrib(gl, buf.normal, meshProgramInfo.attribLocations.a_normal, 3);
         if (buf.texcoord) {
@@ -84,8 +92,16 @@ function renderNode(gl, node) {
             gl.disableVertexAttribArray(meshProgramInfo.attribLocations.a_texcoord);
         }
         bindAttrib(gl, buf.color, meshProgramInfo.attribLocations.a_color, 4);
-        gl.drawArrays(gl.TRIANGLES, 0, node.mesh.numElements);
+
+        if (node.mesh.indexed && buf.indices) {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf.indices);
+            gl.drawElements(gl.TRIANGLES, node.mesh.numElements, gl.UNSIGNED_SHORT, 0);
+        } else {
+            // 비인덱스 버퍼 드로우 콜 구현
+            gl.drawArrays(gl.TRIANGLES, 0, node.mesh.numElements);
+        }
     }
+    
     for (const child of node.children) {
         renderNode(gl, child);
     }
@@ -94,7 +110,7 @@ function renderNode(gl, node) {
 function bindAttrib(gl, buffer, attrib, size) {
     if (buffer && attrib >= 0) {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.vertexAttribPointer(attrib, size, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(attrib, buffer.numComponents || size, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(attrib);
     }
 }
