@@ -177,17 +177,21 @@ window.onload = async function init() {
                     [0, 0, 0];
                 
                 // 조인트 각도 정보 추가
-                const hipAngles = leg.hipJoint?.getAngles() || {x:0, y:0, z:0};
-                const shoulderAngles = leg.shoulderJoint?.getAngles() || {x:0, y:0, z:0};
-                const kneeAngles = leg.kneeJoint?.getAngles() || {x:0, y:0, z:0};
+                const hipAngles = leg.hipJoint?.getAngles() || {x:0, y:.5, z:0};
+                const kneeAngles = leg.kneeJoint?.getAngles() || {x:0, y:.5, z:0};
+                const ankleAngles = leg.ankleJoint?.getAngles() || {x:0, y:.5, z:0};
+
+                // const hipAngles = {x:0, y:.5, z:0};
+                // const kneeAngles = {x:.5, y:.5, z:0};
+                // const ankleAngles = {x:.5, y:.5, z:0};
                 
                 return `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
 Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
 Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})
 Marker: (${markerPos.map(n => n.toFixed(2)).join(", ")})
 Hip: (${(hipAngles.y * 180/Math.PI).toFixed(1)}°)
-Shoulder: (${(shoulderAngles.x * 180/Math.PI).toFixed(1)}°)
-Knee: (${(kneeAngles.x * 180/Math.PI).toFixed(1)}°)`;
+Knee: (${(kneeAngles.x * 180/Math.PI).toFixed(1)}°)
+Ankle: (${(ankleAngles.x * 180/Math.PI).toFixed(1)}°)`;
             }).join("\n");
         }
 

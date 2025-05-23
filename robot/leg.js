@@ -30,13 +30,13 @@ export class Leg {
             position: attach // body에서 다리가 붙는 위치
         });
 
-        this.shoulderJoint = new Joint({
-            name: `leg${index}_shoulder`,
+        this.kneeJoint = new Joint({
+            name: `leg${index}_Knee`,
             ...shoulder
         });
 
-        this.kneeJoint = new Joint({
-            name: `leg${index}_knee`,
+        this.ankleJoint = new Joint({
+            name: `leg${index}_ankle`,
             ...knee
         });
 
@@ -64,9 +64,8 @@ export class Leg {
         });
         footNode.transforms.base = m4.translation(0, lower.mesh.size[1], 0);
 
-        // 조인트 체인 구성: hip -> shoulder -> upper -> knee -> lower -> ankle -> foot
-        this.hipJoint.node.addChild(this.shoulderJoint.node);
-        this.shoulderJoint.node.addChild(upperNode);
+        // 조인트 체인 구성: hip -> upper -> knee -> lower -> foot
+        this.hipJoint.node.addChild(upperNode);
         upperNode.addChild(this.kneeJoint.node);
         this.kneeJoint.node.addChild(lowerNode);
         lowerNode.addChild(this.ankleJoint.node);
@@ -96,7 +95,6 @@ export class Leg {
      */
     updateJoints() {
         this.hipJoint.updateTransform();
-        this.shoulderJoint.updateTransform();
         this.kneeJoint.updateTransform();
         this.ankleJoint.updateTransform();
     }
@@ -105,6 +103,7 @@ export class Leg {
      * 조인트 각도 설정 (IK 솔버에서 사용)
      */
     setJointAngles(hipAngles, shoulderAngles, kneeAngles, ankleAngles) {
+        console.log(`${hipAngles} ${shoulderAngles} ${kneeAngles} ${ankleAngles}`)
         if (hipAngles) this.hipJoint.setAngles(hipAngles.x || 0, hipAngles.y || 0, hipAngles.z || 0);
         if (shoulderAngles) this.shoulderJoint.setAngles(shoulderAngles.x || 0, shoulderAngles.y || 0, shoulderAngles.z || 0);
         if (kneeAngles) this.kneeJoint.setAngles(kneeAngles.x || 0, kneeAngles.y || 0, kneeAngles.z || 0);
