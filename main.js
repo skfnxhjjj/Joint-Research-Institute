@@ -61,19 +61,20 @@ window.onload = async function init() {
         sceneRoot.addChild(controller);
 
         // Add foot debug markers
-        spiderLegs.forEach(leg => {
+        spiderLegs.forEach((leg, index) => {
             const footMarker = new SceneNode({
-                name: `${leg.name}_footMarker`,
-                mesh: createBoxMesh(gl, [0.1, 0.1, 0.1])
+                name: `leg${index}_footMarker`,
+                mesh: createBoxMesh(gl, [0.1, 0.1, 0.1], [1, 0, 0]) // 빨간색으로 foot 위치 표시
             });
             const targetMarker = new SceneNode({
-                name: `${leg.name}_targetMarker`,
-                mesh: createBoxMesh(gl, [0.1, 0.1, 0.1])
+                name: `leg${index}_targetMarker`, 
+                mesh: createBoxMesh(gl, [0.1, 0.1, 0.1], [0, 1, 0]) // 초록색으로 target 위치 표시
             });
-            spiderRoot.addChild(footMarker);
-            spiderRoot.addChild(targetMarker);
+            sceneRoot.addChild(footMarker);
+            sceneRoot.addChild(targetMarker);
             leg.footMarker = footMarker;
             leg.targetMarker = targetMarker;
+            leg._debug = true;
         });
 
         canvas.addEventListener("mousemove", e => {
@@ -98,11 +99,6 @@ window.onload = async function init() {
 
             spiderLegs.forEach(leg => {
                 leg.attachWorld = m4.transformPoint(spiderRoot.worldMatrix, leg.attach);
-            });
-
-            spiderLegs.forEach(leg => {
-                leg.footTarget = m4.transformPoint(spiderRoot.worldMatrix, leg.defaultTargetOffset);
-                leg.targetMarker.localMatrix = m4.translation(...leg.footTarget);
             });
 
             const gaitActive = gait.update(time, spiderLegs, spiderPos, objOffset, spiderYaw);
@@ -146,20 +142,44 @@ window.onload = async function init() {
             // ik.solve(spiderRoot, spiderLegs.map(leg => leg.footTarget));
 
             // Update foot debug markers
-            spiderLegs.forEach(leg => {
-                if (!leg._debug) return;
+            spiderLegs.forEach((leg, index) => {
+                if (!leg.footPosition || !leg.footTarget) {
+                    console.warn(`Leg ${index}: missing position data`, {
+                        footPosition: leg.footPosition,
+                        footTarget: leg.footTarget
+                    });
+                    return;
+                }
+
                 const footPos = leg.footPosition;
                 const targetPos = leg.footTarget;
-                leg.footMarker.localMatrix = m4.translation(...footPos);
-                leg.targetMarker.localMatrix = m4.translation(...targetPos);
+                
+                // 마커 업데이트 - transforms.user 사용
+                if (leg.footMarker && leg.targetMarker) {
+                    leg.footMarker.transforms.user = m4.translation(...footPos);
+                    leg.targetMarker.transforms.user = m4.translation(...targetPos);
+                } else {
+                    console.warn(`Leg ${index}: missing markers`, {
+                        footMarker: !!leg.footMarker,
+                        targetMarker: !!leg.targetMarker
+                    });
+                }
             });
 
+            // 마커 위치 업데이트 후 월드 매트릭스 다시 업데이트
+            sceneRoot.traverse(node => node.updateLocalMatrix?.());
+            sceneRoot.updateWorldMatrix();
+
             const debugPanel = document.getElementById("debugPanel");
-            debugPanel.innerText = spiderLegs.map((leg, i) =>
-                `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
+            debugPanel.innerText = spiderLegs.map((leg, i) => {
+                const markerPos = leg.footMarker?.transforms?.user ? 
+                    [leg.footMarker.transforms.user[12], leg.footMarker.transforms.user[13], leg.footMarker.transforms.user[14]] : 
+                    [0, 0, 0];
+                return `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
 Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
-Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})`
-            ).join("\n");
+Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})
+Marker: (${markerPos.map(n => n.toFixed(2)).join(", ")})`;
+            }).join("\n");
         }
 
         function loop(now) {

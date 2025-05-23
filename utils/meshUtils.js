@@ -1,6 +1,6 @@
 import {loadOBJ} from "./modelLoader.js";
 
-export function createBoxMesh(gl, size) {
+export function createBoxMesh(gl, size, color = [0.7, 0.7, 0.7, 1.0]) {
     const [w, h, d] = size;
     const x = w, y = h, z = d;
 
@@ -39,11 +39,13 @@ export function createBoxMesh(gl, size) {
     ];
 
     const p = [], n = [], c = [];
+    const finalColor = color.length === 3 ? [...color, 1.0] : color;
+    
     for (let i = 0; i < indices.length; i++) {
         const vi = indices[i];
         p.push(...positions.slice(vi * 3, vi * 3 + 3));
         n.push(...normals.slice(vi * 3, vi * 3 + 3));
-        c.push(0.7, 0.7, 0.7, 1.0);
+        c.push(...finalColor);
     }
 
     function makeBuffer(data, num) {

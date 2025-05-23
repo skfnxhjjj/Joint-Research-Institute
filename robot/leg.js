@@ -12,6 +12,7 @@ export class Leg {
 
     async init(gl, index, attach) {
         this.index = index;
+        this.name = `leg${index}`;
         this.attach = attach || [0, 0, 0];
         const {upper, lower, foot} = config.segmentConfig;
 
