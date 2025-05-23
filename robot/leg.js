@@ -1,4 +1,5 @@
 import {SceneNode} from "../scene/SceneNode.js";
+import {Joint} from "./Joint.js";
 import config from "./robotConfig.js";
 import {loadMesh} from "../utils/meshUtils.js";
 
@@ -15,19 +16,37 @@ export class Leg {
         this.name = `leg${index}`;
         this.attach = attach || [0, 0, 0];
         const {upper, lower, foot} = config.segmentConfig;
+        const {hip, shoulder, knee} = config.jointConfig;
 
+        // 세그먼트 메시 로드
         const upperMesh = await loadMesh(gl, upper.mesh);
         const lowerMesh = await loadMesh(gl, lower.mesh);
         const footMesh = await loadMesh(gl, foot.mesh);
 
+        // 조인트 생성
+        this.hipJoint = new Joint({
+            name: `leg${index}_hip`,
+            ...hip,
+            position: attach // body에서 다리가 붙는 위치
+        });
+
+        this.shoulderJoint = new Joint({
+            name: `leg${index}_shoulder`,
+            ...shoulder
+        });
+
+        this.kneeJoint = new Joint({
+            name: `leg${index}_knee`,
+            ...knee
+        });
+
+        // 세그먼트 노드 생성
         const upperNode = new SceneNode({
             name: `leg${index}_upper`,
             mesh: upperMesh,
             pivot: upper.pivot,
             localMatrix: m4.identity()
         });
-        upperNode.transforms.base = m4.translation(...this.attach);
-        upperNode.jointLimits = upper.jointLimits;
 
         const lowerNode = new SceneNode({
             name: `leg${index}_lower`,
@@ -35,11 +54,7 @@ export class Leg {
             pivot: lower.pivot,
             localMatrix: m4.identity()
         });
-        lowerNode.transforms.base = m4.multiply(
-            m4.translation(0, upper.mesh.size[1], 0),
-            m4.translation(...lower.pivot)
-        );
-        lowerNode.jointLimits = lower.jointLimits;
+        lowerNode.transforms.base = m4.translation(0, upper.mesh.size[1], 0);
 
         const footNode = new SceneNode({
             name: `leg${index}_foot`,
@@ -47,23 +62,62 @@ export class Leg {
             pivot: foot.pivot,
             localMatrix: m4.identity()
         });
-        footNode.transforms.base = m4.multiply(
-            m4.translation(0, lower.mesh.size[1], 0),
-            m4.translation(...foot.pivot)
-        );
-        footNode.jointLimits = foot.jointLimits;
+        footNode.transforms.base = m4.translation(0, lower.mesh.size[1], 0);
 
-        upperNode.addChild(lowerNode);
-        lowerNode.addChild(footNode);
+        // 조인트 체인 구성: hip -> shoulder -> upper -> knee -> lower -> ankle -> foot
+        this.hipJoint.node.addChild(this.shoulderJoint.node);
+        this.shoulderJoint.node.addChild(upperNode);
+        upperNode.addChild(this.kneeJoint.node);
+        this.kneeJoint.node.addChild(lowerNode);
+        lowerNode.addChild(this.ankleJoint.node);
+        this.ankleJoint.node.addChild(footNode);
 
-        this.root = upperNode;
+        // 루트는 hip 조인트
+        this.root = this.hipJoint.node;
+        
+        // 세그먼트 노드들 저장
+        this.upperNode = upperNode;
+        this.lowerNode = lowerNode;
+        this.footNode = footNode;
 
-        // Compute initial foot world position from upperNode's worldMatrix
-        upperNode.updateWorldMatrix();
-        this.attachWorld = m4.transformPoint(upperNode.worldMatrix, [0, 0, 0]);
+        // 초기 변환 업데이트
+        this.updateJoints();
+
+        // 초기 foot 위치 계산
+        this.root.updateWorldMatrix();
+        this.attachWorld = m4.transformPoint(this.root.worldMatrix, [0, 0, 0]);
         this.footPosition = [...this.attachWorld];
         this.footTarget = [...this.attachWorld];
         this.phase = "support";
+    }
+
+    /**
+     * 모든 조인트의 변환 업데이트
+     */
+    updateJoints() {
+        this.hipJoint.updateTransform();
+        this.shoulderJoint.updateTransform();
+        this.kneeJoint.updateTransform();
+        this.ankleJoint.updateTransform();
+    }
+
+    /**
+     * 조인트 각도 설정 (IK 솔버에서 사용)
+     */
+    setJointAngles(hipAngles, shoulderAngles, kneeAngles, ankleAngles) {
+        if (hipAngles) this.hipJoint.setAngles(hipAngles.x || 0, hipAngles.y || 0, hipAngles.z || 0);
+        if (shoulderAngles) this.shoulderJoint.setAngles(shoulderAngles.x || 0, shoulderAngles.y || 0, shoulderAngles.z || 0);
+        if (kneeAngles) this.kneeJoint.setAngles(kneeAngles.x || 0, kneeAngles.y || 0, kneeAngles.z || 0);
+        if (ankleAngles) this.ankleJoint.setAngles(ankleAngles.x || 0, ankleAngles.y || 0, ankleAngles.z || 0);
+    }
+
+    /**
+     * 현재 foot의 월드 위치 계산
+     */
+    calculateFootWorldPosition() {
+        this.root.updateWorldMatrix();
+        const footWorldMatrix = this.footNode.worldMatrix;
+        return [footWorldMatrix[12], footWorldMatrix[13], footWorldMatrix[14]];
     }
 
     update(time) {

@@ -139,7 +139,7 @@ window.onload = async function init() {
 
             // Tripod gait and IK
             spiderLegs.forEach(leg => leg.update(time));
-            // ik.solve(spiderRoot, spiderLegs.map(leg => leg.footTarget));
+            ik.solve(spiderRoot, spiderLegs);
 
             // Update foot debug markers
             spiderLegs.forEach((leg, index) => {
@@ -153,7 +153,7 @@ window.onload = async function init() {
 
                 const footPos = leg.footPosition;
                 const targetPos = leg.footTarget;
-
+                
                 // 마커 업데이트 - transforms.user 사용
                 if (leg.footMarker && leg.targetMarker) {
                     leg.footMarker.transforms.user = m4.translation(...footPos);
@@ -172,13 +172,22 @@ window.onload = async function init() {
 
             const debugPanel = document.getElementById("debugPanel");
             debugPanel.innerText = spiderLegs.map((leg, i) => {
-                const markerPos = leg.footMarker?.transforms?.user ?
-                    [leg.footMarker.transforms.user[12], leg.footMarker.transforms.user[13], leg.footMarker.transforms.user[14]] :
+                const markerPos = leg.footMarker?.transforms?.user ? 
+                    [leg.footMarker.transforms.user[12], leg.footMarker.transforms.user[13], leg.footMarker.transforms.user[14]] : 
                     [0, 0, 0];
+                
+                // 조인트 각도 정보 추가
+                const hipAngles = leg.hipJoint?.getAngles() || {x:0, y:0, z:0};
+                const shoulderAngles = leg.shoulderJoint?.getAngles() || {x:0, y:0, z:0};
+                const kneeAngles = leg.kneeJoint?.getAngles() || {x:0, y:0, z:0};
+                
                 return `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
-                Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
-                Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})
-                Marker: (${markerPos.map(n => n.toFixed(2)).join(", ")})`;
+Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
+Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})
+Marker: (${markerPos.map(n => n.toFixed(2)).join(", ")})
+Hip: (${(hipAngles.y * 180/Math.PI).toFixed(1)}°)
+Shoulder: (${(shoulderAngles.x * 180/Math.PI).toFixed(1)}°)
+Knee: (${(kneeAngles.x * 180/Math.PI).toFixed(1)}°)`;
             }).join("\n");
         }
 

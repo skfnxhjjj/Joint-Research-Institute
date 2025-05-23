@@ -47,14 +47,15 @@ export class SceneNode {
     }
 
     updateWorldMatrix(parentWorldMatrix = m4.identity()) {
-        const t1 = m4.translation(...this.pivot);
-        const t2 = m4.translation(-this.pivot[0], -this.pivot[1], -this.pivot[2]);
-        const localWithPivot = m4.multiply(
-            m4.multiply(t1, this.localMatrix),
-            t2
-        );
+        // const t1 = m4.translation(...this.pivot);
+        // const t2 = m4.translation(-this.pivot[0], -this.pivot[1], -this.pivot[2]);
+        // const localWithPivot = m4.multiply(
+        //     m4.multiply(t1, this.localMatrix),
+        //     t2
+        // );
 
-        this.worldMatrix = m4.multiply(parentWorldMatrix, localWithPivot);
+        // this.worldMatrix = m4.multiply(parentWorldMatrix, localWithPivot);
+        this.worldMatrix = m4.multiply(parentWorldMatrix, this.localMatrix);
 
         for (const child of this.children) {
             child.updateWorldMatrix(this.worldMatrix);
