@@ -14,10 +14,36 @@ export class SceneNode {
         this.localMatrix = localMatrix;
         this.worldMatrix = m4.identity();
         this.children = children;
+        this.transforms = {
+            base: m4.identity(),
+            gait: m4.identity(),
+            ik: m4.identity(),
+            user: m4.identity()
+        };
     }
-
+    
     addChild(node) {
         this.children.push(node);
+    }
+
+    updateLocalMatrix() {
+        // Combine all transform components into the final localMatrix
+        this.localMatrix = m4.multiply(
+            this.transforms.user,
+            m4.multiply(
+                this.transforms.ik,
+                m4.multiply(
+                    this.transforms.gait,
+                    this.transforms.base
+                )
+            )
+        );
+    }
+
+
+    getWorldPosition() {
+        const m = this.worldMatrix;
+        return [m[12], m[13], m[14]];
     }
 
     updateWorldMatrix(parentWorldMatrix = m4.identity()) {
@@ -32,6 +58,15 @@ export class SceneNode {
 
         for (const child of this.children) {
             child.updateWorldMatrix(this.worldMatrix);
+        }
+    }
+
+    traverse(callback) {
+        callback(this);
+        for (const child of this.children) {
+            if (typeof child.traverse === 'function') {
+                child.traverse(callback);
+            }
         }
     }
 }

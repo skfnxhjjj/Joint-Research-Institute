@@ -3,7 +3,7 @@ import {loadOBJ} from "./modelLoader.js";
 export function createBoxMesh(gl, size) {
     const [w, h, d] = size;
     const x = w, y = h, z = d;
-    
+
     const positions = [
         // Front
         -x, -y, z, x, -y, z, x, y, z, -x, y, z,
@@ -69,7 +69,6 @@ export async function loadMesh(gl, meshConfig) {
         return createBoxMesh(gl, meshConfig?.size || [1, 1, 1]);
     }
     if (meshConfig.type === "obj") {
-        // Future support for OBJ loading
         return await loadOBJ(gl, meshConfig.path);
     }
     throw new Error(`Unsupported mesh type: ${meshConfig.type}`);
