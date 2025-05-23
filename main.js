@@ -18,6 +18,9 @@ const ground_size = 100
 const ground_divisions = 20
 
 let objOffset = [0, 0, 0];
+let currentSpiderPosition = [0, 1, 0]; // 현재 거미 위치 저장
+let prevSpiderPosition = [0, 1, 0]; // 이전 거미 위치 저장
+let currentYaw = 0; // 현재 회전 각도 저장
 let viewMatrix, projectionMatrix;
 
 window.onload = async function init() {
@@ -56,6 +59,8 @@ window.onload = async function init() {
         sceneRoot.addChild(spiderRoot);
         sceneRoot.addChild(controller);
 
+        console.log(sceneRoot);
+
         canvas.addEventListener("mousemove", e => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -70,16 +75,62 @@ window.onload = async function init() {
         });
 
         function update(time) {
-            // Spider lookAt (yaw-only)
-            const [cx, , cz] = objOffset;
-            const yaw = Math.atan2(cx, cz);
+            // Controller target position
+            const [cx, cy, cz] = objOffset;
+            
+            // Calculate spider height (body height above ground)
+            const spiderHeight = 1.0;
+            
+            // Target position for spider (controller's position with proper height)
+            const targetPosition = [cx, spiderHeight, cz];
+            
+            // Calculate distance to target
+            const distanceToTarget = Math.sqrt(
+                Math.pow(targetPosition[0] - currentSpiderPosition[0], 2) +
+                Math.pow(targetPosition[2] - currentSpiderPosition[2], 2)
+            );
+            
+            // Move spider gradually towards target
+            const moveSpeed = 0.005; // 이동 속도 조절 (0~1, 작을수록 느림)
+            const stopThreshold = 0.1; // 이 거리 이하에서는 이동 중지 (미세한 떨림 방지)
+            
+            if (distanceToTarget > stopThreshold) {
+                // 각 축별로 보간하여 부드러운 이동
+                currentSpiderPosition[0] += (targetPosition[0] - currentSpiderPosition[0]) * moveSpeed;
+                currentSpiderPosition[1] = spiderHeight; // Y는 고정
+                currentSpiderPosition[2] += (targetPosition[2] - currentSpiderPosition[2]) * moveSpeed;
+            }
+            
+            // Calculate movement direction for yaw rotation
+            const deltaX = currentSpiderPosition[0] - prevSpiderPosition[0];
+            const deltaZ = currentSpiderPosition[2] - prevSpiderPosition[2];
+            const movementMagnitude = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+            
+            if (movementMagnitude > 0.01) { // 최소 이동 거리 임계값
+                // 이동 방향으로 회전 (목표 각도)
+                const targetYaw = Math.atan2(deltaX, deltaZ);
+                
+                // 부드러운 회전을 위한 보간 (lerp)
+                const rotationSpeed = 0.1; // 회전 속도 조절 (0~1)
+                let yawDiff = targetYaw - currentYaw;
+                
+                // 각도 차이를 -π ~ π 범위로 정규화
+                while (yawDiff > Math.PI) yawDiff -= 2 * Math.PI;
+                while (yawDiff < -Math.PI) yawDiff += 2 * Math.PI;
+                
+                currentYaw += yawDiff * rotationSpeed;
+            }
+            
             spiderRoot.localMatrix = m4.multiply(
-                m4.translation(0, 2, 0),
-                m4.yRotation(yaw),
+                m4.translation(...currentSpiderPosition),
+                m4.yRotation(currentYaw),
                 m4.scaling(config.scale, config.scale, config.scale),
             );
 
-            // Controller
+            // 현재 위치를 다음 프레임을 위해 저장
+            prevSpiderPosition = [...currentSpiderPosition];
+
+            // Controller position (on ground) - 목표점 표시
             controller.localMatrix = m4.translation(cx, 0, cz);
 
             // Tripod gait and IK

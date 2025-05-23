@@ -17,8 +17,11 @@ Joint-Research-Institute/
 │   └── webgl-utils.js       # WebGL 환경 설정
 ├── scene/                   # 씬 구성 / 렌더링 처리
 │   ├── renderer.js          # 렌더링 루프
+│   └── worldInit.js         # 지형 초기화
 │   ├── worldInit.js         # 지형 초기화
 │   └── SceneNode.js         # SceneNode 클래스 정의
+├── test/                    # 테스트
+│   └── fab_testt.html       # Fabrik Solver 테스트
 ├── robot/                   # 로봇 관련 로직
 │   ├── gait.js              # 애니메이션 계획 생성
 │   ├── ik.js                # IK 적용
@@ -28,6 +31,7 @@ Joint-Research-Institute/
 │   └── leg.js               # Leg 클래스 정의
 ├── utils/                   # 기타 유틸
 │   ├── meshUtils.js         # 메쉬 타입에 따라 생성 / 불러오기
+├   ├── fabrikSolver.js      # fabrik 알고리즘
 │   ├── modelLoader.js       # .obj 로드
 │   └── raycast.js           # 마우스 레이캐스트
 ├── index.html               # HTML 진입점

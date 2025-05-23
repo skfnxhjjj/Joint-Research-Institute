@@ -44,9 +44,6 @@ export function createGround(gl, size, divisions) {
             normal: buffer(normals),
             texcoord: null
         },
-        transform: [1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1]
+        transform: m4.identity()
     };
 }

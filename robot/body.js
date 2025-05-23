@@ -10,6 +10,9 @@ export async function createBody(gl) {
         name: "body",
         mesh: bodyMesh,
         pivot: pivot || [0, 0, 0],
-        localMatrix: m4.identity()
+        localMatrix: m4.multiply(
+            m4.translation(0, 1.5, 0),
+            m4.identity()
+        )
     });
 }

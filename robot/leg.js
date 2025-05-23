@@ -13,17 +13,37 @@ export class Leg {
     async init(gl, index, attach) {
         this.index = index;
         this.attach = attach;
-        const isLeft = index >= 3;
+        const isLeft1 = 0;
+        const isLeft2 = 1;
         const {upper, lower, foot} = config.segmentConfig;
 
         const upperMesh = await loadMesh(gl, upper.mesh);
         const lowerMesh = await loadMesh(gl, lower.mesh);
         const footMesh = await loadMesh(gl, foot.mesh);
 
-        const upperMatrix = m4.multiply(
-            m4.translation(...attach),
-            m4.identity()
-        );
+        // Upper segment positioning and rotation
+        let upperMatrix = m4.translation(...attach);
+        
+        // Apply rotation based on left/right
+        if(index === isLeft1 || index === isLeft2) {
+            // 왼쪽 다리: 바깥쪽으로 -90도, 아래쪽으로 -30도
+            upperMatrix = m4.multiply(
+                upperMatrix,
+                m4.multiply(
+                    m4.yRotation(-Math.PI / 2),
+                    m4.xRotation(Math.PI / 2)
+                )
+            );
+        } else {
+            // 오른쪽 다리: 바깥쪽으로 90도, 아래쪽으로 -30도
+            upperMatrix = m4.multiply(
+                upperMatrix,
+                m4.multiply(
+                    m4.yRotation(-Math.PI / 2),
+                    m4.xRotation(-Math.PI / 2)
+                )
+            );
+        }
 
         const upperNode = new SceneNode({
             name: `leg${index}_upper`,
@@ -33,25 +53,45 @@ export class Leg {
         });
         upperNode.jointLimits = upper.jointLimits;
 
+
+        // if(index === isLeft1 || index === isLeft2) {
+        //     // 왼쪽 다리: 바깥쪽으로 -90도, 아래쪽으로 -30도
+        //     upperMatrix = m4.multiply(
+        //         upperMatrix,
+        //         m4.multiply(
+        //             m4.yRotation(-Math.PI / 2),
+        //             m4.xRotation(Math.PI / 2)
+        //         )
+        //     );
+        // } else {
+        //     // 오른쪽 다리: 바깥쪽으로 90도, 아래쪽으로 -30도
+        //     upperMatrix = m4.multiply(
+        //         upperMatrix,
+        //         m4.multiply(
+        //             m4.yRotation(-Math.PI / 2),
+        //             m4.xRotation(-Math.PI / 2)
+        //         )
+        //     );
+        // }
+
+        // Lower segment - positioned at the end of upper segment
         const lowerNode = new SceneNode({
             name: `leg${index}_lower`,
             mesh: lowerMesh,
             pivot: lower.pivot,
             localMatrix: m4.multiply(
-                m4.translation(0, upper.mesh.size[1], 0),
-                m4.translation(...lower.pivot),
+                m4.translation(0, 0.4, 0), // upper.mesh.size[1] = 0.4
+                m4.xRotation(Math.PI / 4) // 45도 앞쪽으로 굽힘
             )
         });
         lowerNode.jointLimits = lower.jointLimits;
 
+        // Foot segment - positioned at the end of lower segment  
         const footNode = new SceneNode({
             name: `leg${index}_foot`,
             mesh: footMesh,
             pivot: foot.pivot,
-            localMatrix: m4.multiply(
-                m4.translation(0, lower.mesh.size[1], 0),
-                m4.translation(...foot.pivot)
-            )
+            localMatrix: m4.translation(0, 0.5, 0)
         });
         footNode.jointLimits = foot.jointLimits;
 
