@@ -73,26 +73,26 @@ export class Leg {
         const dy = this.footTarget[1] - this.footPosition[1];
         const dz = this.footTarget[2] - this.footPosition[2];
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        
+
         const threshold = 0.01;
 
         if (dist > threshold) {
             // 스윙 단계일 때는 더 빠르게, 지지 단계일 때는 조금 더 천천히
             const alpha = this.phase === "swing" ? 0.15 : 0.08;
-            
+
             const lerp = (a, b, t) => a + (b - a) * t;
-            
+
             this.footPosition = [
                 lerp(this.footPosition[0], this.footTarget[0], alpha),
                 lerp(this.footPosition[1], this.footTarget[1], alpha),
                 lerp(this.footPosition[2], this.footTarget[2], alpha)
             ];
-            
+
             this.isMoving = true;
         } else {
             // 목표에 도달하면 정확히 목표 위치로 설정
             this.footPosition = [...this.footTarget];
-            
+
             // 스윙 단계가 끝나면 지지 단계로 전환
             if (this.phase === "swing") {
                 this.isMoving = false;

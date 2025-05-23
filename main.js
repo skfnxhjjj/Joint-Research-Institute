@@ -67,7 +67,7 @@ window.onload = async function init() {
                 mesh: createBoxMesh(gl, [0.1, 0.1, 0.1], [1, 0, 0]) // 빨간색으로 foot 위치 표시
             });
             const targetMarker = new SceneNode({
-                name: `leg${index}_targetMarker`, 
+                name: `leg${index}_targetMarker`,
                 mesh: createBoxMesh(gl, [0.1, 0.1, 0.1], [0, 1, 0]) // 초록색으로 target 위치 표시
             });
             sceneRoot.addChild(footMarker);
@@ -153,7 +153,7 @@ window.onload = async function init() {
 
                 const footPos = leg.footPosition;
                 const targetPos = leg.footTarget;
-                
+
                 // 마커 업데이트 - transforms.user 사용
                 if (leg.footMarker && leg.targetMarker) {
                     leg.footMarker.transforms.user = m4.translation(...footPos);
@@ -172,13 +172,13 @@ window.onload = async function init() {
 
             const debugPanel = document.getElementById("debugPanel");
             debugPanel.innerText = spiderLegs.map((leg, i) => {
-                const markerPos = leg.footMarker?.transforms?.user ? 
-                    [leg.footMarker.transforms.user[12], leg.footMarker.transforms.user[13], leg.footMarker.transforms.user[14]] : 
+                const markerPos = leg.footMarker?.transforms?.user ?
+                    [leg.footMarker.transforms.user[12], leg.footMarker.transforms.user[13], leg.footMarker.transforms.user[14]] :
                     [0, 0, 0];
                 return `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
-Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
-Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})
-Marker: (${markerPos.map(n => n.toFixed(2)).join(", ")})`;
+                Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
+                Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})
+                Marker: (${markerPos.map(n => n.toFixed(2)).join(", ")})`;
             }).join("\n");
         }
 
