@@ -16,7 +16,7 @@ export const mountPoints = [
 // Shared config for each segment type
 export const segmentConfig = {
     body: {
-        mesh: {type: "box", size: [.2, .2, .2]},
+        mesh: {type: "box", size: [.5, .4, 1]},
         pivot: [0, 0, 0]
     },
     upper: {
@@ -38,7 +38,7 @@ export const segmentConfig = {
         }
     },
     foot: {
-        mesh: {type: "box", size: [0, 0, 0]},
+        mesh: {type: "box", size: [0.1, 0.1, 0.1]},
         pivot: [0, 0.1, 0],
         jointLimits: {
             x: [0, 0],

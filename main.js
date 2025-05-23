@@ -105,7 +105,7 @@ window.onload = async function init() {
                 leg.targetMarker.localMatrix = m4.translation(...leg.footTarget);
             });
 
-            const gaitActive = gait.update(time, spiderLegs, spiderPos, objOffset);
+            const gaitActive = gait.update(time, spiderLegs, spiderPos, objOffset, spiderYaw);
 
             if (gaitActive && dist > 0.05) {
                 const speed = 0.02;
@@ -156,9 +156,9 @@ window.onload = async function init() {
 
             const debugPanel = document.getElementById("debugPanel");
             debugPanel.innerText = spiderLegs.map((leg, i) =>
-                `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"}
-                Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
-                Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})`
+                `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
+Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
+Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})`
             ).join("\n");
         }
 

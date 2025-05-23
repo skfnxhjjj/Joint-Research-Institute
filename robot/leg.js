@@ -66,23 +66,36 @@ export class Leg {
     }
 
     update(time) {
-        if (!this.isMoving) return;
+        if (!this.footTarget || !this.footPosition) return;
 
-        const dist = m4.distance(this.footPosition, this.footTarget);
-        const threshold = 0.001;
+        const dx = this.footTarget[0] - this.footPosition[0];
+        const dy = this.footTarget[1] - this.footPosition[1];
+        const dz = this.footTarget[2] - this.footPosition[2];
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        
+        const threshold = 0.01;
 
         if (dist > threshold) {
+            // 스윙 단계일 때는 더 빠르게, 지지 단계일 때는 조금 더 천천히
+            const alpha = this.phase === "swing" ? 0.15 : 0.08;
+            
             const lerp = (a, b, t) => a + (b - a) * t;
-            const alpha = 0.2;
-
+            
             this.footPosition = [
                 lerp(this.footPosition[0], this.footTarget[0], alpha),
                 lerp(this.footPosition[1], this.footTarget[1], alpha),
                 lerp(this.footPosition[2], this.footTarget[2], alpha)
             ];
+            
+            this.isMoving = true;
         } else {
-            this.isMoving = false;
-            this.phase = "support";
+            // 목표에 도달하면 정확히 목표 위치로 설정
+            this.footPosition = [...this.footTarget];
+            
+            // 스윙 단계가 끝나면 지지 단계로 전환
+            if (this.phase === "swing") {
+                this.isMoving = false;
+            }
         }
     }
 
