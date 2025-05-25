@@ -32,12 +32,12 @@ export class Joint extends SceneNode {
     updateLocalMatrix() {
         // user * ik * gait * base 순서로 누적 곱
         this.localMatrix = m4.multiply(
-            this.transforms.user,
+            this.transforms.base,
             m4.multiply(
-                this.transforms.ik,
+                this.transforms.gait,
                 m4.multiply(
-                    this.transforms.gait,
-                    this.transforms.base
+                    this.transforms.ik,
+                    this.transforms.user
                 )
             )
         );

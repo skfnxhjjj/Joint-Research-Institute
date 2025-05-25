@@ -6,6 +6,7 @@ import {raycast} from "./utils/raycast.js";
 import {createBoxMesh} from './utils/meshUtils.js';
 import {buildSpider} from "./robot/robot.js";
 import {SceneNode} from "./scene/SceneNode.js";
+import {Joint} from './robot/Joint.js';
 
 let gl;
 const eye = [5, 5, 5];
@@ -37,7 +38,7 @@ window.onload = async function init() {
         const groundMesh = createGround(gl, ground_size, ground_divisions);
         const groundNode = new SceneNode({name: "ground", mesh: groundMesh});
 
-        const spiderRoot = buildSpider(gl, 1); // 6다리 spider 생성
+        const {root: spiderRoot, legs} = buildSpider(gl, 1); 
 
         const controllerMesh = createBoxMesh(gl, [.1, .1, .1], [1, 0, 0]);
         const controllerNode = new SceneNode({name: "controller", mesh: controllerMesh});
@@ -77,6 +78,10 @@ window.onload = async function init() {
         function render() {
             const [cx, cy, cz] = objOffset
             controllerNode.transforms.user = m4.translation(cx, cy, cz);
+
+            if (legs.length > 0 && legs[0].solveIK) {
+                legs[0].solveIK([cx, cy, cz]);
+            }
 
             update();
             renderScene(gl, sceneRoot);

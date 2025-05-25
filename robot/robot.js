@@ -10,10 +10,12 @@ export function buildSpider(gl, numLegs = 6) {
     const bodyMesh = createBoxMesh(gl, robotConfig.body.size, robotConfig.body.color);
     const body = new SceneNode({name: 'body', mesh: bodyMesh});
 
+    const legs = [];
     for (let i = 0; i < numLegs; i++) {
         const leg = new Leg(gl, `leg${i + 1}`);
         spiderRoot.addChild(leg.rootNode);
+        legs.push(leg);
     }
     spiderRoot.addChild(body);
-    return spiderRoot;
+    return {root: spiderRoot, legs};
 }
