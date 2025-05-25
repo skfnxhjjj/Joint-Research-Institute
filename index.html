@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <title>관절연구소</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="style.css" rel="stylesheet">
 
     <script id="vertex-shader" type="x-shader/x-vertex">
         attribute vec3 vPosition;
@@ -53,14 +53,15 @@
             vec3 lit = diffuseTerm + ambientTerm;
 
             vec3 color = fColor * lit;
+
             gl_FragColor = vec4(color, uDiffuse.a);
         }
     </script>
 
-    <script type="text/javascript" src="common/webgl-utils.js"></script>
-    <script type="text/javascript" src="common/initShaders.js"></script>
-    <script type="text/javascript" src="common/m4.js"></script>
-    <script type="module" src="main.js"></script>
+    <script src="common/webgl-utils.js" type="text/javascript"></script>
+    <script src="common/initShaders.js" type="text/javascript"></script>
+    <script src="common/m4.js" type="text/javascript"></script>
+    <script src="main.js" type="module"></script>
 </head>
 
 <body>
@@ -92,15 +93,10 @@
         y: <span id="posY">0</span><br>
         z: <span id="posZ">0</span><br>
         <hr>
-        Scale:<br>
-        x: <span id="scaleX">1</span><br>
-        y: <span id="scaleY">1</span><br>
-        z: <span id="scaleZ">1</span><br>
-        <hr>
         Rotation:<br>
-        x: <span id="rotX">0</span><br>
-        y: <span id="rotY">0</span><br>
-        z: <span id="rotZ">0</span><br>
+        x: <span id="rotX">0</span>°<br>
+        y: <span id="rotY">0</span>°<br>
+        z: <span id="rotZ">0</span>°<br>
     </div>
     <div id="controller">
         <div><strong>Controller</strong></div>
@@ -110,6 +106,7 @@
         y: <span id="controllerY">0.00</span><br>
         z: <span id="controllerZ">0.00</span><br>
     </div>
+    <div id="debugPanel"></div>
 </div>
 </body>
 </html>
