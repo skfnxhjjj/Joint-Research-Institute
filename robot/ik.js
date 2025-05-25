@@ -87,6 +87,7 @@ function solveLegIKWithFabrik(leg, targetPosition, legIndex) {
     const {segmentLengths} = config;
     const upperLength = segmentLengths.upper;
     const lowerLength = segmentLengths.lower;
+    const footLength = segmentLengths.foot;
     
     // Hip 조인트의 월드 위치를 계산
     const hipWorldPos = leg.hipJoint.node.getWorldPosition();
@@ -104,7 +105,6 @@ function solveLegIKWithFabrik(leg, targetPosition, legIndex) {
         knee: 0,
         ankle: 0
     };
-    console.log(prevAngles)
     
     // 너무 가까운 목표거나 변화가 작으면 이전 각도 유지 (안정성 증대)
     if (targetDistance < 0.1) {
@@ -124,9 +124,10 @@ function solveLegIKWithFabrik(leg, targetPosition, legIndex) {
         0.003 // margin of error를 더 크게
     );
     
-    // 세그먼트 추가: Upper -> Lower 
+    // 세그먼트 추가: Upper -> Lower -> Foot
     fabrik.addSegment(upperLength, 0, 0);  // Upper segment
-    fabrik.addSegment(lowerLength, 0, 0);  // Lower segment
+    fabrik.addSegment(lowerLength, 0, 0);  // Lower segment  
+    fabrik.addSegment(footLength, 0, 0);   // Foot segment
     
     // FABRIK 계산 실행
     const converged = fabrik.compute(
@@ -144,7 +145,7 @@ function solveLegIKWithFabrik(leg, targetPosition, legIndex) {
         let hipAngle = jointAngles[0]?.y || 0;
         hipAngle = smoothAngle(hipAngle, prevAngles.hip, 0.02, 0.15); // 매우 강한 평활화
         
-        // Knee 각도 계산
+        // Knee 각도 계산 (upper와 lower 사이의 각도)
         let kneeAngle = 0;
         if (jointAngles.length > 1) {
             const relativeAngle = calculateRelativeAngle(
@@ -155,10 +156,16 @@ function solveLegIKWithFabrik(leg, targetPosition, legIndex) {
             kneeAngle = smoothAngle(relativeAngle, prevAngles.knee, 0.05, 0.2);
         }
         
-        // Ankle 각도 (발을 수평으로 유지)
-        const totalPitch = (jointAngles[0]?.x || 0) + (jointAngles[1]?.x || 0);
-        let ankleAngle = -totalPitch;
-        ankleAngle = smoothAngle(ankleAngle, prevAngles.ankle, 0.05, 0.2);
+        // Ankle 각도 계산 (lower와 foot 사이의 각도)
+        let ankleAngle = 0;
+        if (jointAngles.length > 2) {
+            const ankleRelativeAngle = calculateRelativeAngle(
+                fabrik.segments[0].point,
+                fabrik.segments[1].point,
+                fabrik.segments[2].point
+            );
+            ankleAngle = smoothAngle(ankleRelativeAngle, prevAngles.ankle, 0.05, 0.2);
+        }
         
         // 각도 적용
         leg.hipJoint.setAngle('y', hipAngle);

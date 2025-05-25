@@ -222,6 +222,8 @@ class FabrikSolver {
         z: 0  // 롤 회전은 현재 사용하지 않음
       });
     }
+
+    console.log(angles)
     
     return angles;
   }

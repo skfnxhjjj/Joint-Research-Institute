@@ -16,7 +16,7 @@ export class Leg {
         this.name = `leg${index}`;
         this.attach = attach || [0, 0, 0];
         const {upper, lower, foot} = config.segmentConfig;
-        const {hip, shoulder, knee} = config.jointConfig;
+        const {hip, knee, ankle} = config.jointConfig;
 
         // 세그먼트 메시 로드
         const upperMesh = await loadMesh(gl, upper.mesh);
@@ -31,13 +31,13 @@ export class Leg {
         });
 
         this.kneeJoint = new Joint({
-            name: `leg${index}_Knee`,
-            ...shoulder
+            name: `leg${index}_knee`,
+            ...knee
         });
 
         this.ankleJoint = new Joint({
             name: `leg${index}_ankle`,
-            ...knee
+            ...ankle
         });
 
         // 세그먼트 노드 생성
@@ -64,7 +64,7 @@ export class Leg {
         });
         footNode.transforms.base = m4.translation(0, lower.mesh.size[1], 0);
 
-        // 조인트 체인 구성: hip -> upper -> knee -> lower -> foot
+        // 조인트 체인 구성: hip -> upper -> knee -> lower -> ankle -> foot
         this.hipJoint.node.addChild(upperNode);
         upperNode.addChild(this.kneeJoint.node);
         this.kneeJoint.node.addChild(lowerNode);
