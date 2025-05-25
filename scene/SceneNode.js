@@ -24,13 +24,14 @@ export class SceneNode {
 
     updateLocalMatrix() {
         // Combine all transform components into the final localMatrix
+        // base * gait * ik * user 순서로 변경 (Joint와 동일하게)
         this.localMatrix = m4.multiply(
-            this.transforms.user,
+            this.transforms.base,
             m4.multiply(
-                this.transforms.ik,
+                this.transforms.gait,
                 m4.multiply(
-                    this.transforms.gait,
-                    this.transforms.base
+                    this.transforms.ik,
+                    this.transforms.user
                 )
             )
         );

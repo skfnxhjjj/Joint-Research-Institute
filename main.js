@@ -15,8 +15,9 @@ const at = [0, 0, 0];
 const ground_size = 0
 const ground_divisions = 20
 
-let objOffset = [0, 0, 0];
+let objOffset = [0.5, 0.5, 0.5];
 let viewMatrix, projectionMatrix;
+let legs = []; // legs를 전역으로 이동
 
 let sceneRoot; // 전체 scene 트리의 루트
 
@@ -38,7 +39,8 @@ window.onload = async function init() {
         const groundMesh = createGround(gl, ground_size, ground_divisions);
         const groundNode = new SceneNode({name: "ground", mesh: groundMesh});
 
-        const {root: spiderRoot, legs} = buildSpider(gl, 1); 
+        const {root: spiderRoot, legs: spiderLegs} = buildSpider(gl, 1); 
+        legs = spiderLegs; // 전역 변수에 할당
 
         const controllerMesh = createBoxMesh(gl, [.1, .1, .1], [1, 0, 0]);
         const controllerNode = new SceneNode({name: "controller", mesh: controllerMesh});
@@ -59,6 +61,11 @@ window.onload = async function init() {
                 document.getElementById('controllerX').textContent = objOffset[0].toFixed(2);
                 document.getElementById('controllerY').textContent = objOffset[1].toFixed(2);
                 document.getElementById('controllerZ').textContent = objOffset[2].toFixed(2);
+                
+                // IK 계산을 여기서만 수행
+                if (legs.length > 0 && legs[0].solveIK) {
+                    legs[0].solveIK([objOffset[0], objOffset[1], objOffset[2]]);
+                }
             }
         });
 
@@ -79,9 +86,7 @@ window.onload = async function init() {
             const [cx, cy, cz] = objOffset
             controllerNode.transforms.user = m4.translation(cx, cy, cz);
 
-            if (legs.length > 0 && legs[0].solveIK) {
-                legs[0].solveIK([cx, cy, cz]);
-            }
+            // IK 계산을 렌더 루프에서 제거
 
             update();
             renderScene(gl, sceneRoot);
