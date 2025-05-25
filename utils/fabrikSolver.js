@@ -1,24 +1,7 @@
 "use strict";
 
-// 벡터 유틸리티 함수들
-const vectorUtils = {
-    subtractVectors: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
-    addVectors: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
-    scaleVector: (v, scale) => [v[0] * scale, v[1] * scale, v[2] * scale],
-    normalize: (v) => {
-        const len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-        return len === 0 ? [0, 0, 0] : [v[0] / len, v[1] / len, v[2] / len];
-    },
-    distance: (a, b) => {
-        const dx = a[0] - b[0];
-        const dy = a[1] - b[1]; 
-        const dz = a[2] - b[2];
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    }
-};
-
 class Segment3D {
-    constructor(referenceX, referenceY, referenceZ, length, zAngle = 0, yAngle = 0) {
+    constructor(referenceX, referenceY, referenceZ, length, zAngle, yAngle) {
         this.zAngle = zAngle;
         this.yAngle = yAngle;
         this.length = length;
@@ -46,7 +29,12 @@ class FabrikSolver {
         this.marginOfError = marginOfError;
     }
 
-    addSegment(length, zAngle = 0, yAngle = 0) {
+    unitVector(vector) {
+        const len = Math.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2);
+        return len === 0 ? [0,0,0] : [vector[0]/len, vector[1]/len, vector[2]/len];
+    }
+
+    addSegment(length, zAngle, yAngle) {
         let segment;
         if (this.segments.length > 0) {
             const last = this.segments[this.segments.length - 1];
@@ -73,13 +61,21 @@ class FabrikSolver {
     }
 
     isReachable(targetX, targetY, targetZ) {
-        const dist = vectorUtils.distance(this.basePoint, [targetX, targetY, targetZ]);
-        return dist <= this.armLength;
+        const dist = Math.sqrt(
+            Math.pow(this.basePoint[0] - targetX, 2) +
+            Math.pow(this.basePoint[1] - targetY, 2) +
+            Math.pow(this.basePoint[2] - targetZ, 2)
+        );
+        return dist < this.armLength;
     }
 
     inMarginOfError(targetX, targetY, targetZ) {
         const last = this.segments[this.segments.length - 1];
-        const dist = vectorUtils.distance(last.point, [targetX, targetY, targetZ]);
+        const dist = Math.sqrt(
+            Math.pow(last.point[0] - targetX, 2) +
+            Math.pow(last.point[1] - targetY, 2) +
+            Math.pow(last.point[2] - targetZ, 2)
+        );
         return dist < this.marginOfError;
     }
 
@@ -90,17 +86,17 @@ class FabrikSolver {
         for (let i = this.segments.length - 1; i > 0; i--) {
             let dir;
             if (i === this.segments.length - 1) {
-                dir = vectorUtils.subtractVectors(this.segments[i-1].point, target);
-                dir = vectorUtils.normalize(dir);
-                this.segments[i-1].point = vectorUtils.addVectors(
-                    vectorUtils.scaleVector(dir, this.segments[i].length),
+                dir = window.m4.subtractVectors(this.segments[i-1].point, target);
+                dir = window.m4.normalize(dir);
+                this.segments[i-1].point = window.m4.addVectors(
+                    window.m4.scaleVector(dir, this.segments[i].length),
                     target
                 );
             } else {
-                dir = vectorUtils.subtractVectors(this.segments[i-1].point, this.segments[i].point);
-                dir = vectorUtils.normalize(dir);
-                this.segments[i-1].point = vectorUtils.addVectors(
-                    vectorUtils.scaleVector(dir, this.segments[i].length),
+                dir = window.m4.subtractVectors(this.segments[i-1].point, this.segments[i].point);
+                dir = window.m4.normalize(dir);
+                this.segments[i-1].point = window.m4.addVectors(
+                    window.m4.scaleVector(dir, this.segments[i].length),
                     this.segments[i].point
                 );
             }
@@ -110,101 +106,167 @@ class FabrikSolver {
         for (let i = 0; i < this.segments.length; i++) {
             let dir;
             if (i === 0) {
-                dir = vectorUtils.subtractVectors(this.segments[i].point, this.basePoint);
-                dir = vectorUtils.normalize(dir);
-                this.segments[i].point = vectorUtils.addVectors(
-                    vectorUtils.scaleVector(dir, this.segments[i].length),
+                dir = window.m4.subtractVectors(this.segments[i].point, this.basePoint);
+                dir = window.m4.normalize(dir);
+                this.segments[i].point = window.m4.addVectors(
+                    window.m4.scaleVector(dir, this.segments[i].length),
                     this.basePoint
                 );
             } else if (i === this.segments.length - 1) {
-                dir = vectorUtils.subtractVectors(this.segments[i-1].point, target);
-                dir = vectorUtils.normalize(dir);
-                this.segments[i].point = vectorUtils.addVectors(
-                    vectorUtils.scaleVector(dir, -this.segments[i].length),
+                dir = window.m4.subtractVectors(this.segments[i-1].point, target);
+                dir = window.m4.normalize(dir);
+                this.segments[i].point = window.m4.addVectors(
+                    window.m4.scaleVector(dir, -this.segments[i].length),
                     this.segments[i-1].point
                 );
             } else {
-                dir = vectorUtils.subtractVectors(this.segments[i].point, this.segments[i-1].point);
-                dir = vectorUtils.normalize(dir);
-                this.segments[i].point = vectorUtils.addVectors(
-                    vectorUtils.scaleVector(dir, this.segments[i].length),
+                dir = window.m4.subtractVectors(this.segments[i].point, this.segments[i-1].point);
+                dir = window.m4.normalize(dir);
+                this.segments[i].point = window.m4.addVectors(
+                    window.m4.scaleVector(dir, this.segments[i].length),
                     this.segments[i-1].point
                 );
             }
         }
     }
 
-    compute(targetX, targetY, targetZ, maxIterations = 10) {
-        if (!this.isReachable(targetX, targetY, targetZ)) {
-            // 도달 불가능한 경우 최대한 가까이 가도록 방향 조정
-            const direction = vectorUtils.normalize(
-                vectorUtils.subtractVectors([targetX, targetY, targetZ], this.basePoint)
-            );
-            const reachableTarget = vectorUtils.addVectors(
-                this.basePoint,
-                vectorUtils.scaleVector(direction, this.armLength * 0.95)
-            );
-            targetX = reachableTarget[0];
-            targetY = reachableTarget[1]; 
-            targetZ = reachableTarget[2];
+    compute(targetX, targetY, targetZ) {
+        if (this.isReachable(targetX, targetY, targetZ)) {
+            let iterations = 0;
+            const maxIterations = 50; // 무한 루프 방지
+            
+            while (!this.inMarginOfError(targetX, targetY, targetZ) && iterations < maxIterations) {
+                this.iterate(targetX, targetY, targetZ);
+                iterations++;
+            }
+            return iterations < maxIterations;
+        } else {
+            return false;
         }
-
-        let iterations = 0;
-        while (!this.inMarginOfError(targetX, targetY, targetZ) && iterations < maxIterations) {
-            this.iterate(targetX, targetY, targetZ);
-            iterations++;
-        }
-        
-        return iterations < maxIterations; // 수렴 여부 반환
-    }
-
-    /**
-     * 현재 세그먼트들의 관절 각도를 계산하여 반환
-     */
-    getJointAngles() {
-        const angles = [];
-        
-        for (let i = 0; i < this.segments.length; i++) {
-            let direction;
-            
-            if (i === 0) {
-                direction = vectorUtils.subtractVectors(this.segments[i].point, this.basePoint);
-            } else {
-                direction = vectorUtils.subtractVectors(this.segments[i].point, this.segments[i-1].point);
-            }
-            
-            direction = vectorUtils.normalize(direction);
-            
-            // 방향이 너무 작으면 이전 각도 유지 (안정성)
-            if (Math.abs(direction[0]) < 0.001 && Math.abs(direction[1]) < 0.001 && Math.abs(direction[2]) < 0.001) {
-                angles.push({ x: 0, y: 0, z: 0 });
-                continue;
-            }
-            
-            // Y축 회전 (Hip - 좌우 회전)
-            let yaw = 0;
-            const horizontalLength = Math.sqrt(direction[0]**2 + direction[2]**2);
-            
-            if (horizontalLength > 0.001) {
-                yaw = Math.atan2(direction[0], direction[2]);
-            }
-            
-            // X축 회전 (Pitch - 상하 회전)
-            let pitch = 0;
-            if (horizontalLength > 0.001) {
-                pitch = Math.atan2(-direction[1], horizontalLength);
-            }
-            
-            angles.push({
-                x: pitch,
-                y: yaw,
-                z: 0  // 롤 회전은 현재 사용하지 않음
-            });
-        }
-        
-        return angles;
     }
 }
 
-// Default export로 변경
-export default FabrikSolver;
+export class AnalyticalIkWithFabrikSolver {
+    constructor(coxaLength, femurLength, tibiaLength) {
+        this.coxaLen = coxaLength;
+        this.femurLen = femurLength;
+        this.tibiaLen = tibiaLength;
+        this.maxReach = femurLength + tibiaLength;
+        this.minReach = Math.abs(femurLength - tibiaLength);
+        
+        // FABRIK 솔버 초기화
+        this.fabrikSolver = new FabrikSolver(0, 0, 0, 0.01);
+    }
+
+    solve(targetPosition) {
+        const target = [...targetPosition];
+        
+        const coxaAngle = Math.atan2(target[0], target[2]);
+        
+        const cosCoxa = Math.cos(coxaAngle);
+        const sinCoxa = Math.sin(coxaAngle);
+        
+        const localTarget = [
+            target[0] * cosCoxa + target[2] * sinCoxa,
+            target[1],
+            -target[0] * sinCoxa + target[2] * cosCoxa
+        ];
+        
+        // FABRIK 솔버 설정 coxa 끝점에서 시작
+        const femurStart = [0, this.coxaLen, 0];
+        
+        this.fabrikSolver = new FabrikSolver(femurStart[0], femurStart[1], femurStart[2], 0.01);
+        
+        // femur, tibia 세그먼트 추가
+        this.fabrikSolver.addSegment(this.femurLen, 0, 0);
+        this.fabrikSolver.addSegment(this.tibiaLen, 0, 0);
+        
+        // FABRIK 수행
+        const success = this.fabrikSolver.compute(localTarget[0], localTarget[1], localTarget[2]);
+        
+        let femurAngle = 0;
+        let tibiaAngle = 0;
+        
+        if (success && this.fabrikSolver.segments.length >= 2) {
+            const femurEnd = this.fabrikSolver.segments[0].point;
+            const tibiaEnd = this.fabrikSolver.segments[1].point;
+            
+            const femurVector = [
+                femurEnd[0] - femurStart[0],
+                femurEnd[1] - femurStart[1],
+                femurEnd[2] - femurStart[2]
+            ];
+            
+            const horizontalDist = Math.sqrt(femurVector[0]**2 + femurVector[2]**2);
+            femurAngle = Math.atan2(-femurVector[1], horizontalDist);
+
+            const targetFromFemur = [
+                localTarget[0] - femurStart[0],
+                localTarget[1] - femurStart[1], 
+                localTarget[2] - femurStart[2]
+            ];
+            
+            const targetDist2D = Math.sqrt(targetFromFemur[0]**2 + targetFromFemur[1]**2 + targetFromFemur[2]**2);
+            
+            const cosKneeAngle = (this.femurLen**2 + this.tibiaLen**2 - targetDist2D**2) / (2 * this.femurLen * this.tibiaLen);
+            const clampedCosKneeAngle = Math.max(-1, Math.min(1, cosKneeAngle));
+            
+            tibiaAngle = -(Math.acos(clampedCosKneeAngle) - Math.PI);
+            
+        } else {
+            // FABRIK 실패하면 cos 법칙 Two-Bone IK 사용 : https://award09130.tistory.com/11
+            const targetFromFemur = [
+                localTarget[0] - femurStart[0],
+                localTarget[1] - femurStart[1], 
+                localTarget[2] - femurStart[2]
+            ];
+            
+            const horizontalDist = Math.sqrt(targetFromFemur[0]**2 + targetFromFemur[2]**2);
+            const verticalDist = targetFromFemur[1];
+            const targetDist2D = Math.sqrt(horizontalDist**2 + verticalDist**2);
+            
+            if (targetDist2D > this.maxReach * 0.99) {
+                femurAngle = Math.atan2(-verticalDist, horizontalDist);
+                tibiaAngle = 0;
+            } else if (targetDist2D < this.minReach * 1.1) {
+                femurAngle = -Math.PI / 6;
+                tibiaAngle = Math.PI / 3;
+            } else {
+                const cosAngle = (this.femurLen**2 + targetDist2D**2 - this.tibiaLen**2) / (2 * this.femurLen * targetDist2D);
+                const clampedCosAngle = Math.max(-1, Math.min(1, cosAngle));
+                
+                const cosKneeAngle = (this.femurLen**2 + this.tibiaLen**2 - targetDist2D**2) / (2 * this.femurLen * this.tibiaLen);
+                const clampedCosKneeAngle = Math.max(-1, Math.min(1, cosKneeAngle));
+                
+                const targetAngle = Math.atan2(-verticalDist, horizontalDist);
+                const triangleAngle = Math.acos(clampedCosAngle);
+                femurAngle = targetAngle + triangleAngle;
+                
+                tibiaAngle = -(Math.acos(clampedCosKneeAngle) - Math.PI);
+            }
+        }
+        
+        const targetDist = Math.sqrt(target[0]**2 + target[1]**2 + target[2]**2);
+        
+        return {
+            coxa: coxaAngle,
+            femur: femurAngle,
+            tibia: tibiaAngle,
+            reachable: success || targetDist <= this.maxReach,
+            distance: targetDist
+        };
+    }
+
+
+    // 디버깅용
+    solveDegrees(targetPosition) {
+        const result = this.solve(targetPosition);
+        return {
+            coxa: result.coxa * 180 / Math.PI,
+            femur: result.femur * 180 / Math.PI,
+            tibia: result.tibia * 180 / Math.PI,
+            reachable: result.reachable,
+            distance: result.distance
+        };
+    }
+}
