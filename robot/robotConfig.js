@@ -18,20 +18,17 @@ export const jointConfig = {
     hip: {
         type: "revolute",
         axis: "y", // 좌우 회전 (yaw)
-        limits: { min: -Math.PI/2, max: Math.PI/2 },
-        position: [0, 0, 0] // body에서의 상대 위치
+        limits: { min: -Math.PI/2, max: Math.PI/2 }
     },
     knee: {
         type: "revolute",
         axis: "x", // 무릎 굽힘 (pitch)
-        limits: { min: -Math.PI/2, max: Math.PI/2 },
-        position: [0, upperLength, 0] // upper 끝에서의 상대 위치
+        limits: { min: -Math.PI/2, max: Math.PI/2 }
     },
     ankle: {
         type: "revolute",
         axis: "x", // 발목 회전 (pitch)
-        limits: { min: -Math.PI/4, max: Math.PI/4 },
-        position: [0, lowerLength, 0] // lower 끝에서의 상대 위치
+        limits: { min: -Math.PI/4, max: Math.PI/4 }
     }
 };
 

@@ -98,7 +98,8 @@ window.onload = async function init() {
             const dist = Math.hypot(dx, dz);
 
             spiderLegs.forEach(leg => {
-                leg.attachWorld = m4.transformPoint(spiderRoot.worldMatrix, leg.attach);
+                // Hip joint의 실제 월드 위치를 사용
+                leg.attachWorld = leg.hipJoint.node.getWorldPosition();
             });
 
             const gaitActive = gait.update(time, spiderLegs, spiderPos, objOffset, spiderYaw);
@@ -140,10 +141,18 @@ window.onload = async function init() {
             // Tripod gait and IK
             spiderLegs.forEach(leg => leg.update(time));
             
-            // 로봇이 움직일 때만 FABRIK IK 시스템 적용
+            // FABRIK IK 시스템 적용
             if (gaitActive && dist > 0.05) {
+                // 로봇이 움직일 때는 gait에서 설정한 target으로 IK 계산
+                ik.solve(spiderRoot, spiderLegs);
+            } else {
+                // 로봇이 정지 상태일 때도 현재 footTarget으로 IK 계산 (자세 유지)
                 ik.solve(spiderRoot, spiderLegs);
             }
+            
+            // IK 계산 후 월드 매트릭스 다시 업데이트 (중요!)
+            sceneRoot.traverse(node => node.updateLocalMatrix?.());
+            sceneRoot.updateWorldMatrix();
             
             // 테스트: 첫 번째 다리에 FABRIK 기반 원형 움직임 적용 (선택적)
             // ik.testLegMovementFabrik(spiderLegs[0], time);
@@ -188,7 +197,14 @@ window.onload = async function init() {
                 const kneeAngles = leg.kneeJoint?.getAngles() || {x:0, y:0, z:0};
                 const ankleAngles = leg.ankleJoint?.getAngles() || {x:0, y:0, z:0};
                 
-                return `leg${i}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
+                // 다리 위치 정보
+                const [x, y, z] = leg.attach;
+                const isRightSide = x > 0;
+                const position = z > 0.5 ? "앞" : (z < -0.5 ? "뒤" : "중간");
+                const colorInfo = isRightSide ? "🟢(오른쪽)" : "🔵(왼쪽)";
+                
+                return `leg${i} ${colorInfo} ${position}: ${leg.isMoving ? "🟢" : "⚫️"} [${leg.phase || "unknown"}]
+위치: (${x}, ${y}, ${z})
 Foot: (${leg.footPosition.map(n => n.toFixed(2)).join(", ")})
 Target: (${leg.footTarget.map(n => n.toFixed(2)).join(", ")})
 Marker: (${markerPos.map(n => n.toFixed(2)).join(", ")})

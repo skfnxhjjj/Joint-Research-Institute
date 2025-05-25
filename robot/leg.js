@@ -1,7 +1,7 @@
 import {SceneNode} from "../scene/SceneNode.js";
 import {Joint} from "./Joint.js";
 import config from "./robotConfig.js";
-import {loadMesh} from "../utils/meshUtils.js";
+import {loadMesh, createBoxMesh} from "../utils/meshUtils.js";
 
 // Leg class
 export class Leg {
@@ -18,26 +18,38 @@ export class Leg {
         const {upper, lower, foot} = config.segmentConfig;
         const {hip, knee, ankle} = config.jointConfig;
 
-        // 세그먼트 메시 로드
-        const upperMesh = await loadMesh(gl, upper.mesh);
-        const lowerMesh = await loadMesh(gl, lower.mesh);
-        const footMesh = await loadMesh(gl, foot.mesh);
+        // 다리 위치 디버깅 정보 출력
+        const [x, y, z] = attach;
+        const isRightSide = x > 0;
+        const position = z > 0.5 ? "앞" : (z < -0.5 ? "뒤" : "중간");
+        const colorName = isRightSide ? "초록색(오른쪽)" : "파란색(왼쪽)";
+        console.log(`다리 ${index}: ${colorName} ${position} (${x}, ${y}, ${z})`);
 
-        // 조인트 생성
+        // 다리 색상 결정: 오른쪽은 초록색, 왼쪽은 파란색
+        const legColor = isRightSide ? [0.2, 0.8, 0.2, 1.0] : [0.2, 0.2, 0.8, 1.0]; // 초록색 : 파란색
+
+        // 세그먼트 메시 로드 (색상 적용)
+        const upperMesh = createBoxMesh(gl, upper.mesh.size, legColor);
+        const lowerMesh = createBoxMesh(gl, lower.mesh.size, legColor);
+        const footMesh = createBoxMesh(gl, foot.mesh.size, legColor);
+
+        // 조인트 생성 - 각 조인트는 해당 세그먼트의 끝에 위치
         this.hipJoint = new Joint({
             name: `leg${index}_hip`,
             ...hip,
-            position: attach // body에서 다리가 붙는 위치
+            position: [0, 0, 0] // body에서 다리가 시작하는 위치
         });
 
         this.kneeJoint = new Joint({
             name: `leg${index}_knee`,
-            ...knee
+            ...knee,
+            position: [0, upper.mesh.size[1], 0] // upper 세그먼트 끝에 위치
         });
 
         this.ankleJoint = new Joint({
             name: `leg${index}_ankle`,
-            ...ankle
+            ...ankle,
+            position: [0, lower.mesh.size[1], 0] // lower 세그먼트 끝에 위치
         });
 
         // 세그먼트 노드 생성
@@ -54,7 +66,6 @@ export class Leg {
             pivot: lower.pivot,
             localMatrix: m4.identity()
         });
-        lowerNode.transforms.base = m4.translation(0, upper.mesh.size[1], 0);
 
         const footNode = new SceneNode({
             name: `leg${index}_foot`,
@@ -62,12 +73,16 @@ export class Leg {
             pivot: foot.pivot,
             localMatrix: m4.identity()
         });
-        footNode.transforms.base = m4.translation(0, lower.mesh.size[1], 0);
 
-        // 조인트 체인 구성: hip -> upper -> knee -> lower -> ankle -> foot
+        // 조인트 체인 구성: body -> hip -> upper -> knee -> lower -> ankle -> foot
+        // Hip joint는 body에 직접 연결되고, upper 세그먼트를 자식으로 가짐
         this.hipJoint.node.addChild(upperNode);
+        
+        // Knee joint는 upper 세그먼트 끝에 위치하고, lower 세그먼트를 자식으로 가짐
         upperNode.addChild(this.kneeJoint.node);
         this.kneeJoint.node.addChild(lowerNode);
+        
+        // Ankle joint는 lower 세그먼트 끝에 위치하고, foot 세그먼트를 자식으로 가짐
         lowerNode.addChild(this.ankleJoint.node);
         this.ankleJoint.node.addChild(footNode);
 
@@ -79,15 +94,81 @@ export class Leg {
         this.lowerNode = lowerNode;
         this.footNode = footNode;
 
+        // 각 다리의 초기 hip 각도 설정 (body에서 바깥쪽으로 향하도록)
+        this.setInitialHipAngle(index, attach);
+
         // 초기 변환 업데이트
         this.updateJoints();
 
-        // 초기 foot 위치 계산
+        // 초기 foot 위치 계산 - 현실적인 위치로 설정
         this.root.updateWorldMatrix();
         this.attachWorld = m4.transformPoint(this.root.worldMatrix, [0, 0, 0]);
-        this.footPosition = [...this.attachWorld];
-        this.footTarget = [...this.attachWorld];
+        
+        // 현실적인 초기 foot 위치 계산 (다리 길이 고려)
+        const groundHeight = -0.8;
+        const localOffset = [attach[0] * 0.3, 0, attach[2] * 0.3];
+        const initialFootPosition = [
+            this.attachWorld[0] + localOffset[0],
+            groundHeight,
+            this.attachWorld[2] + localOffset[2]
+        ];
+        
+        this.footPosition = [...initialFootPosition];
+        this.footTarget = [...initialFootPosition];
+        
+        console.log(`다리 ${index} 초기 foot 위치: [${initialFootPosition[0].toFixed(2)}, ${initialFootPosition[1].toFixed(2)}, ${initialFootPosition[2].toFixed(2)}]`);
+        
         this.phase = "support";
+    }
+
+    /**
+     * 각 다리의 초기 hip 각도를 설정
+     */
+    setInitialHipAngle(legIndex, attachPoint) {
+        // 다리의 위치에 따라 초기 hip 각도 계산
+        const [x, y, z] = attachPoint;
+        
+        // 6개 다리의 배치:
+        // 0: 오른쪽 앞 (0.4, 0, 1)
+        // 1: 오른쪽 중간 (0.4, 0, 0) 
+        // 2: 오른쪽 뒤 (0.4, 0, -1)
+        // 3: 왼쪽 앞 (-0.4, 0, 1)
+        // 4: 왼쪽 중간 (-0.4, 0, 0)
+        // 5: 왼쪽 뒤 (-0.4, 0, -1)
+        
+        let initialHipAngle = 0;
+        
+        if (x > 0) {
+            // 오른쪽 다리들 - IK가 선호하는 방향으로 설정
+            if (z > 0.5) {
+                // 앞쪽 다리 (index 0)
+                initialHipAngle = Math.PI / 6; // 30도 (오른쪽 앞으로)
+            } else if (z < -0.5) {
+                // 뒤쪽 다리 (index 2) - IK가 0도 근처를 선호하므로 수정
+                initialHipAngle = 0; // 0도 (정면으로)
+            } else {
+                // 중간 다리 (index 1)
+                initialHipAngle = Math.PI / 2; // 90도 (완전히 오른쪽으로)
+            }
+        } else {
+            // 왼쪽 다리들 - IK가 선호하는 방향으로 설정
+            if (z > 0.5) {
+                // 앞쪽 다리 (index 3) - IK가 120도 근처를 선호하므로 수정
+                initialHipAngle = 2 * Math.PI / 3; // 120도 (왼쪽 앞으로)
+            } else if (z < -0.5) {
+                // 뒤쪽 다리 (index 5)
+                initialHipAngle = Math.PI + Math.PI / 6; // 210도 (왼쪽 뒤로)
+            } else {
+                // 중간 다리 (index 4)
+                initialHipAngle = -Math.PI / 2; // -90도 (완전히 왼쪽으로)
+            }
+        }
+        
+        // 디버깅 정보 출력
+        console.log(`다리 ${legIndex} 초기 hip 각도: ${(initialHipAngle * 180 / Math.PI).toFixed(1)}도`);
+        
+        // Hip 각도 설정
+        this.hipJoint.setAngle('y', initialHipAngle);
     }
 
     /**
