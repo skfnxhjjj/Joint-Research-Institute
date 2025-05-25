@@ -139,7 +139,14 @@ window.onload = async function init() {
 
             // Tripod gait and IK
             spiderLegs.forEach(leg => leg.update(time));
-            ik.solve(spiderRoot, spiderLegs);
+            
+            // 로봇이 움직일 때만 FABRIK IK 시스템 적용
+            if (gaitActive && dist > 0.05) {
+                ik.solve(spiderRoot, spiderLegs);
+            }
+            
+            // 테스트: 첫 번째 다리에 FABRIK 기반 원형 움직임 적용 (선택적)
+            // ik.testLegMovementFabrik(spiderLegs[0], time);
 
             // Update foot debug markers
             spiderLegs.forEach((leg, index) => {

@@ -102,10 +102,8 @@ export class Leg {
     /**
      * 조인트 각도 설정 (IK 솔버에서 사용)
      */
-    setJointAngles(hipAngles, shoulderAngles, kneeAngles, ankleAngles) {
-        console.log(`${hipAngles} ${shoulderAngles} ${kneeAngles} ${ankleAngles}`)
+    setJointAngles(hipAngles, kneeAngles, ankleAngles) {
         if (hipAngles) this.hipJoint.setAngles(hipAngles.x || 0, hipAngles.y || 0, hipAngles.z || 0);
-        if (shoulderAngles) this.shoulderJoint.setAngles(shoulderAngles.x || 0, shoulderAngles.y || 0, shoulderAngles.z || 0);
         if (kneeAngles) this.kneeJoint.setAngles(kneeAngles.x || 0, kneeAngles.y || 0, kneeAngles.z || 0);
         if (ankleAngles) this.ankleJoint.setAngles(ankleAngles.x || 0, ankleAngles.y || 0, ankleAngles.z || 0);
     }

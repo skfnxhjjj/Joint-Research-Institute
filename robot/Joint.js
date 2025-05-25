@@ -25,6 +25,13 @@ export class Joint {
             z: 0
         };
         
+        // 이전 프레임의 각도 (평활화용)
+        this.previousAngles = {
+            x: 0,
+            y: 0,
+            z: 0
+        };
+        
         // 목표 회전각들 (IK에서 계산될 값)
         this.targetAngles = {
             x: 0,
@@ -44,6 +51,15 @@ export class Joint {
     }
     
     /**
+     * 각도를 -π와 π 사이로 정규화
+     */
+    normalizeAngle(angle) {
+        while (angle > Math.PI) angle -= 2 * Math.PI;
+        while (angle < -Math.PI) angle += 2 * Math.PI;
+        return angle;
+    }
+    
+    /**
      * 현재 각도를 기반으로 변환 매트릭스 업데이트
      */
     updateTransform() {
@@ -59,14 +75,21 @@ export class Joint {
     }
     
     /**
-     * 특정 축의 각도 설정 (제한 범위 내에서)
+     * 특정 축의 각도 설정 (제한 범위 내에서, 평활화 적용)
      */
     setAngle(axis, angle) {
+        // 이전 각도 저장
+        this.previousAngles[axis] = this.angles[axis];
+        
+        // 각도 정규화
+        angle = this.normalizeAngle(angle);
+        
         if (axis === this.axis) {
             // 주 회전축인 경우 제한 체크
             angle = Math.max(this.limits.min, Math.min(this.limits.max, angle));
         }
         
+        // 각도 설정 (평활화는 이미 IK에서 처리됨)
         this.angles[axis] = angle;
         this.updateTransform();
     }
@@ -75,9 +98,14 @@ export class Joint {
      * 모든 각도를 한번에 설정
      */
     setAngles(x = 0, y = 0, z = 0) {
-        this.angles.x = x;
-        this.angles.y = y;
-        this.angles.z = z;
+        // 이전 각도 저장
+        this.previousAngles.x = this.angles.x;
+        this.previousAngles.y = this.angles.y;
+        this.previousAngles.z = this.angles.z;
+        
+        this.angles.x = this.normalizeAngle(x);
+        this.angles.y = this.normalizeAngle(y);
+        this.angles.z = this.normalizeAngle(z);
         this.updateTransform();
     }
     
