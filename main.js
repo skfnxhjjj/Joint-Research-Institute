@@ -131,8 +131,32 @@ function updatePanel() {
 function update() {
     sceneRootNode.traverse(node => node.updateLocalMatrix());
     sceneRootNode.computeWorld();
-    spider.update([1, 0, 0]);
-    //updatePanel();
+
+    let spiderPos = spiderRootNode.getWorldPosition();
+    if (!spiderPos || spiderPos.some(v => isNaN(v))) {
+        spiderPos = [0, 0.4, 0];
+    }
+
+    let targetPos = [cx, cy, cz];
+    if (!targetPos || targetPos.some(v => isNaN(v))) {
+        targetPos = [0, 0.4, 0];
+    }
+
+    const speed = 0.005;
+    const newPos = [
+        spiderPos[0] + (targetPos[0] - spiderPos[0]) * speed,
+        spiderPos[1] + (targetPos[1] - spiderPos[1]) * speed,
+        spiderPos[2] + (targetPos[2] - spiderPos[2]) * speed,
+    ];
+
+    const dx = targetPos[0] - newPos[0];
+    const dz = targetPos[2] - newPos[2];
+    const yaw = Math.atan2(dx, dz);
+
+    let transform = m4.multiply(m4.translation(...newPos), m4.yRotation(yaw));
+    spiderRootNode.transforms.user = transform;
+
+    spider.update(targetPos);
 }
 
 function render() {
