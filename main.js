@@ -74,6 +74,9 @@ function initScene(gl, canvas) {
     sceneRootNode.addChild(spiderRootNode);
     sceneRootNode.addChild(controllerNode);
 
+    // 거미 높이를 월드 바닥에 닿게 올렸습니다 05.27
+    spiderRootNode.transforms.user = m4.translation(0, 0.4, 0);
+
     userControl(canvas, groundMesh, controllerNode);
 }
 
