@@ -24,7 +24,6 @@ export class SceneNode {
 
     updateLocalMatrix() {
         // Combine all transform components into the final localMatrix
-        // base * gait * ik * user 순서로 변경 (Joint와 동일하게)
         this.localMatrix = m4.multiply(
             this.transforms.base,
             m4.multiply(
@@ -42,7 +41,21 @@ export class SceneNode {
         for (const child of this.children) {
             if (typeof child.traverse === 'function') {
                 child.traverse(callback);
+            } else {
+                console.warn("invalid child in traverse:", child);
             }
         }
+    }
+
+    computeWorld(parentMatrix = m4.identity()) {
+        this.worldMatrix = m4.multiply(parentMatrix, this.localMatrix);
+        for (const child of this.children) {
+            child.computeWorld(this.worldMatrix);
+        }
+    }
+
+    getWorldPosition() {
+        const m = this.worldMatrix;
+        return [m[12], m[13], m[14]];
     }
 }

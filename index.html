@@ -67,24 +67,6 @@
 <body>
 <div id="container">
     <canvas height="1024" id="gl-canvas" width="1024"></canvas>
-    <div id="cam">
-        <div><strong>Camera</strong></div>
-        <hr>
-        Eye:<br>
-        x: <span id="eyeX">100</span><br>
-        y: <span id="eyeY">100</span><br>
-        z: <span id="eyeZ">100</span><br>
-        <hr>
-        At:<br>
-        x: <span id="atX">0</span><br>
-        y: <span id="atY">0</span><br>
-        z: <span id="atZ">0</span><br>
-        <hr>
-        Up:<br>
-        x: <span id="upX">0</span><br>
-        y: <span id="upY">1</span><br>
-        z: <span id="upZ">0</span><br>
-    </div>
     <div id="model">
         <div><strong>Spider</strong></div>
         <hr>
@@ -106,7 +88,24 @@
         y: <span id="controllerY">0.00</span><br>
         z: <span id="controllerZ">0.00</span><br>
     </div>
-    <div id="debugPanel"></div>
+    <div id="debugPanel">
+        Debug<br>
+        CoxaJoint:<br>
+        (<span id="coxaX">0.00</span>,
+        <span id="coxaY">0.00</span>,
+        <span id="coxaZ">0.00</span>,
+        <span id="coxaR">0</span>°)<br>
+        FemurJoint:<br>
+        (<span id="femurX">0.00</span>,
+        <span id="femurY">0.00</span>,
+        <span id="femurZ">0.00</span>,
+        <span id="femurR">0</span>°)<br>
+        TibiaJoint:<br>
+        (<span id="tibiaX">0.00</span>,
+        <span id="tibiaY">0.00</span>,
+        <span id="tibiaZ">0.00</span>,
+        <span id="tibiaR">0</span>°)<br>
+    </div>
 </div>
 </body>
 </html>

@@ -1,4 +1,5 @@
 # 관절연구소
+
 Computer Graphics 조별 과제
 
 ## 📁 프로젝트 구조
@@ -20,7 +21,7 @@ Joint-Research-Institute/
 ├── robot/                   # 로봇 관련 로직
 │   ├── gait.js              # 애니메이션
 │   ├── ik.js                # IK
-│   └── robot.js             # 로봇 계층 구조
+│   └── Spider.js             # 로봇 계층 구조
 ├── utils/                   # 기타 유틸
 │   ├── modelLoader.js       # .obj 로드
 │   └── raycast.js           # 마우스 레이캐스트
