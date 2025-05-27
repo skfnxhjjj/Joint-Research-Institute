@@ -85,7 +85,7 @@ function initScene(gl, canvas) {
     // gait 타겟 시각화용 노드 생성 및 추가
     gaitTargetNodes = [];
     for (let i = 0; i < 6; i++) {
-        const mesh = createBoxMesh(gl, [0.1, 0.1, 0.1], [0, 1, 1]); // 작은 청록색 박스
+        const mesh = createBoxMesh(gl, [0, 0, 0], [0, 1, 1]); // 작은 청록색 박스
         const node = new SceneNode({
             name: `gaitTarget${i}`,
             mesh: mesh
@@ -101,10 +101,19 @@ function initScene(gl, canvas) {
     // body 기준 각 다리의 base 위치 계산
     const legBasePositions = [];
     const R = 0.9; // gait 타겟 반지름
-    const stepLength = 0.15;
-    const stepHeight = 0.04;
+    const stepLength = 0.5;
+    const stepHeight = 0.2;
     for (let i = 0; i < 6; i++) {
-        const theta = i * 2 * Math.PI / 6;
+        let theta = i * 2 * Math.PI / 6;
+    
+        if(i == 0 || i == 3) {
+            theta = +theta;
+        }
+        else {
+            theta = -theta;
+        }
+        
+
         legBasePositions.push([R * Math.cos(theta), 0, R * Math.sin(theta)]);
     }
     gait = new TripodGait(6, [0, 0.4, 0], legBasePositions, stepLength, stepHeight, 1.0);

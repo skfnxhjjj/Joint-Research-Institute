@@ -29,7 +29,7 @@ export class Spider {
       // Position and orient each coxa joint
 
       leg.coxaBase.transforms.base = m4.multiply(
-        m4.translation(x, 0, z),
+        m4.translation(x*0.2, 0, z*0.2),
         m4.multiply(
             m4.yRotation(theta),
             m4.zRotation(-Math.PI / 3)

@@ -198,7 +198,7 @@ export class AnalyticalIkWithFabrikSolver {
             ];
             
             const horizontalDist = Math.sqrt(femurVector[0]**2 + femurVector[2]**2);
-            femurAngle = Math.atan2(-femurVector[1], horizontalDist);
+            femurAngle = Math.atan2(femurVector[1], horizontalDist);
 
             const targetFromFemur = [
                 localTarget[0] - femurStart[0],

@@ -91,7 +91,6 @@ export class Leg {
     // const invCoxaWorld = m4.inverse(this.coxaJoint.worldMatrix);
     // const localTarget = m4.transformPoint(invCoxaWorld, targetPosition);
     const coxaBaseWorld = this.coxaBase.getWorldPosition();
-    console.log(`[${this.rootNode.name}] coxaBaseWorld:`, coxaBaseWorld, 'target:', targetPosition);
 
     const invCoxaBaseWorld = m4.inverse(this.coxaBase.worldMatrix);
     const localTarget = m4.transformPoint(invCoxaBaseWorld, targetPosition);
