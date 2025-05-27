@@ -12,7 +12,7 @@ let gl;
 const eye = [5, 5, 5];
 const at = [0, 0, 0];
 
-const ground_size = 0
+const ground_size = 50
 const ground_divisions = 20
 
 let viewMatrix, projectionMatrix;
@@ -25,6 +25,7 @@ let controllerNode;
 let spider;
 let spiderRootNode;
 let spiderHeight = 0.4;
+let spiderYaw = 0;
 
 let gait;
 let lastTime = performance.now();
@@ -72,7 +73,7 @@ function initScene(gl, canvas) {
     spider = new Spider(gl, 6);
     spiderRootNode = spider.root;
 
-    const controllerMesh = createBoxMesh(gl, [.1, .1, .1], [1, 1, 1]);
+    const controllerMesh = createBoxMesh(gl, [.1, .1, .1], [1, 0, 0]);
     controllerNode = new SceneNode({
         name: "controller",
         mesh: controllerMesh
@@ -183,46 +184,52 @@ function update() {
         targetPos = [0, spiderHeight, 0];
     }
 
-    const speed = 0.005;
-    const newPos = [
-        spiderPos[0] + (targetPos[0] - spiderPos[0]) * speed,
-        spiderHeight,
-        spiderPos[2] + (targetPos[2] - spiderPos[2]) * speed,
-    ];
-
-    const dx = targetPos[0] - newPos[0];
-    const dz = targetPos[2] - newPos[2];
-    const bodyYaw = Math.atan2(dx, dz);
-
-    let transform = m4.multiply(m4.translation(...newPos), m4.yRotation(bodyYaw));
-    spiderRootNode.transforms.user = transform;
+    const dx = targetPos[0] - spiderPos[0];
+    const dz = targetPos[2] - spiderPos[2];
+    const dist = Math.sqrt(dx * dx + dz * dz);
 
     // TripodGait 업데이트 및 각 다리별 타겟 계산
     const now = performance.now();
     let dt = (now - lastTime) / 1000;
     lastTime = now;
 
-    // spider가 controller에 가까워지면 gait 속도 감쇠
-    const dist = Math.sqrt(
-        Math.pow(targetPos[0] - newPos[0], 2) +
-        Math.pow(targetPos[1] - newPos[1], 2) +
-        Math.pow(targetPos[2] - newPos[2], 2)
-    );
-    const stopThreshold = 0.5;
+    // 거리 기반 gait 활성화 및 이동
     let gaitSpeedScale = 1.0;
-    if (dist < stopThreshold) {
-        gaitSpeedScale = dist / stopThreshold;
-        if (gaitSpeedScale < 0.01) gaitSpeedScale = 0;
+    if (dist > 0.05) {
+        const speed = 0.005;
+        const dir = [dx / dist, 0, dz / dist];
+        const newPos = [
+            spiderPos[0] + dir[0] * speed,
+            spiderHeight,
+            spiderPos[2] + dir[2] * speed
+        ];
+
+        // 부드러운 회전
+        const targetYaw = Math.atan2(dir[0], dir[2]);
+        let deltaYaw = targetYaw - spiderYaw;
+
+        // [-π, π] 범위로 클램핑
+        deltaYaw = ((deltaYaw + Math.PI) % (2 * Math.PI)) - Math.PI;
+
+        const maxTurn = 0.05; // 프레임당 최대 회전 각도
+        const turn = Math.max(-maxTurn, Math.min(maxTurn, deltaYaw));
+        spiderYaw += turn;
+
+        let transform = m4.multiply(m4.translation(...newPos), m4.yRotation(spiderYaw));
+        spiderRootNode.transforms.user = transform;
+    } else {
+        // 정지 상태에서는 gait 속도 감쇠
+        gaitSpeedScale = 0;
     }
+
     dt *= gaitSpeedScale;
 
-    const gaitParamsList = gait.update(dt, newPos, bodyYaw);
+    const gaitParamsList = gait.update(dt, spiderPos, spiderYaw);
     spider.update(gaitParamsList);
 
     // gait 타겟 시각화 노드 위치 갱신
     for (let i = 0; i < gaitTargetNodes.length; i++) {
         const pos = gaitParamsList[i].targetPosition;
-        console.log(`[GaitTarget${i}] World Target:`, pos);
         gaitTargetNodes[i].transforms.user = m4.translation(pos[0], pos[1], pos[2]);
     }
 }
