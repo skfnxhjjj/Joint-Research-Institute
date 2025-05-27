@@ -17,7 +17,7 @@ export class Leg {
         this.coxaJoint = new Joint({
             name: `${name}_coxaJoint`,
             axis: [0, 1, 0],
-            offset: [0, 0.1, 0]
+            offset: [0, 0.3, 0]
         });
         this.femurJoint = new Joint({
             name: `${name}_femurJoint`,
@@ -64,30 +64,57 @@ export class Leg {
 
     // 예시: gait/IK update용 메서드
     updateGait(gaitParams) {
-        // gaitParams에 따라 각 joint의 transforms.gait 수정
+        // gaitParams.targetPosition, gaitParams.phase 등 활용 가능
+        this.solveIK(gaitParams.targetPosition);
     }
 
     solveIK(targetPosition) {
-        // IK 솔버를 사용하여 각도 계산
-        const result = this.ikSolver.solve(targetPosition);
 
-        // 디버깅용
-        // if (Math.random() < 0.05) { // 5%만 출력
+
+        // coxa Joint의 월드 -> 로컬 변환
+        const invCoxaWorld = m4.inverse(this.coxaJoint.worldMatrix);
+        const localTarget = m4.transformPoint(invCoxaWorld, targetPosition);
+
+        const reach = robotConfig.leg.femur.size[1] + robotConfig.leg.tibia.size[1];
+        const localDist = Math.sqrt(
+            localTarget[0]**2 + localTarget[1]**2 + localTarget[2]**2
+        );
+        console.log(`[${this.rootNode.name}] localTarget:`, localTarget, 
+            'localDist:', localDist.toFixed(3), 
+            'reach:', reach.toFixed(3), 
+            'inReach:', localDist <= reach);
+
+        const result = this.ikSolver.solve(localTarget);
+
+        // IK 솔버를 사용하여 각도 계산
+        // const result = this.ikSolver.solve(targetPosition);
+
+        // 디버깅: IK 입력 좌표계, 각도, 도달 가능 여부 등 출력
+        // if (Math.random() < 0.1) { // 10% 확률로만 출력 (너무 많지 않게)
+        //     console.log('Leg:', this.rootNode.name);
+        //     console.log('  IK Target (입력):', targetPosition);
+        //     console.log('  IK Result:', result);
         //     const degrees = this.ikSolver.solveDegrees(targetPosition);
-        //     console.log('IK Target:', targetPosition);
-        //     console.log('Calculated angles (deg):', {
-        //         coxa: degrees.coxa.toFixed(1),
-        //         femur: degrees.femur.toFixed(1),
-        //         tibia: degrees.tibia.toFixed(1)
-        //     });
-        //     console.log('Reachable:', result.reachable, 'Distance:', result.distance.toFixed(3));
+        //     console.log('  Angles (deg):', degrees);
+        //     console.log('  Reachable:', result.reachable, 'Distance:', result.distance);
+        //     // 각 관절의 worldMatrix에서 y값
+        //     console.log('  Coxa Y:', this.coxaJoint.worldMatrix[13]);
+        //     console.log('  Femur Y:', this.femurJoint.worldMatrix[13]);
+        //     console.log('  Tibia Y:', this.tibiaJoint.worldMatrix[13]);
+        //     console.log('  TibiaEnd Y:', this.tibiaSegment.worldMatrix[13]);
         // }
-        
+
         // 각도가 유효한지 확인하고 적용
         if (!isNaN(result.coxa) && !isNaN(result.femur) && !isNaN(result.tibia)) {
             this.coxaJoint.transforms.ik = m4.yRotation(result.coxa);
             this.femurJoint.transforms.ik = m4.xRotation(result.femur);
             this.tibiaJoint.transforms.ik = m4.xRotation(result.tibia);
         }
+    }
+
+    getTibiaEndWorldPosition() {
+        // tibiaSegment의 월드 행렬에서 위치 추출
+        const m = this.tibiaSegment.worldMatrix;
+        return [m[12], m[13], m[14]];
     }
 }

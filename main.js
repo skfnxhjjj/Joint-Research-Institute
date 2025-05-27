@@ -6,6 +6,7 @@ import {raycast} from "./utils/raycast.js";
 import {createBoxMesh} from './utils/meshUtils.js';
 import {Spider} from "./robot/Spider.js";
 import {SceneNode} from "./scene/SceneNode.js";
+import {TripodGait} from "./robot/gait.js";
 
 let gl;
 const eye = [5, 5, 5];
@@ -23,6 +24,13 @@ let controllerNode;
 
 let spider;
 let spiderRootNode;
+let spiderHeight = 0.4;
+
+let gait;
+let lastTime = performance.now();
+
+// gait 타겟 시각화용 노드 배열
+let gaitTargetNodes = [];
 
 window.onload = async function () {
     try {
@@ -74,8 +82,32 @@ function initScene(gl, canvas) {
     sceneRootNode.addChild(spiderRootNode);
     sceneRootNode.addChild(controllerNode);
 
+    // gait 타겟 시각화용 노드 생성 및 추가
+    gaitTargetNodes = [];
+    for (let i = 0; i < 6; i++) {
+        const mesh = createBoxMesh(gl, [0.1, 0.1, 0.1], [0, 1, 1]); // 작은 청록색 박스
+        const node = new SceneNode({
+            name: `gaitTarget${i}`,
+            mesh: mesh
+        });
+        gaitTargetNodes.push(node);
+        sceneRootNode.addChild(node);
+    }
+
     // 거미 높이를 월드 바닥에 닿게 올렸습니다 05.27
-    spiderRootNode.transforms.user = m4.translation(0, 0.4, 0);
+    spiderRootNode.transforms.user = m4.translation(0, 0.9, 0);
+
+    // TripodGait 초기화
+    // body 기준 각 다리의 base 위치 계산
+    const legBasePositions = [];
+    const R = 0.9; // gait 타겟 반지름
+    const stepLength = 0.15;
+    const stepHeight = 0.09;
+    for (let i = 0; i < 6; i++) {
+        const theta = i * 2 * Math.PI / 6;
+        legBasePositions.push([R * Math.cos(theta), 0, R * Math.sin(theta)]);
+    }
+    gait = new TripodGait(6, [0, 0.4, 0], legBasePositions, stepLength, stepHeight, 1.0);
 
     userControl(canvas, groundMesh, controllerNode);
 }
@@ -134,29 +166,56 @@ function update() {
 
     let spiderPos = spiderRootNode.getWorldPosition();
     if (!spiderPos || spiderPos.some(v => isNaN(v))) {
-        spiderPos = [0, 0.4, 0];
+        spiderPos = [0, spiderHeight, 0];
     }
 
     let targetPos = [cx, cy, cz];
     if (!targetPos || targetPos.some(v => isNaN(v))) {
-        targetPos = [0, 0.4, 0];
+        targetPos = [0, spiderHeight, 0];
     }
 
     const speed = 0.005;
     const newPos = [
         spiderPos[0] + (targetPos[0] - spiderPos[0]) * speed,
-        spiderPos[1] + (targetPos[1] - spiderPos[1]) * speed,
+        spiderHeight,
         spiderPos[2] + (targetPos[2] - spiderPos[2]) * speed,
     ];
 
     const dx = targetPos[0] - newPos[0];
     const dz = targetPos[2] - newPos[2];
-    const yaw = Math.atan2(dx, dz);
+    const bodyYaw = Math.atan2(dx, dz);
 
-    let transform = m4.multiply(m4.translation(...newPos), m4.yRotation(yaw));
+    let transform = m4.multiply(m4.translation(...newPos), m4.yRotation(bodyYaw));
     spiderRootNode.transforms.user = transform;
 
-    spider.update(targetPos);
+    // TripodGait 업데이트 및 각 다리별 타겟 계산
+    const now = performance.now();
+    let dt = (now - lastTime) / 1000;
+    lastTime = now;
+
+    // spider가 controller에 가까워지면 gait 속도 감쇠
+    const dist = Math.sqrt(
+        Math.pow(targetPos[0] - newPos[0], 2) +
+        Math.pow(targetPos[1] - newPos[1], 2) +
+        Math.pow(targetPos[2] - newPos[2], 2)
+    );
+    const stopThreshold = 0.5;
+    let gaitSpeedScale = 1.0;
+    if (dist < stopThreshold) {
+        gaitSpeedScale = dist / stopThreshold;
+        if (gaitSpeedScale < 0.01) gaitSpeedScale = 0;
+    }
+    dt *= gaitSpeedScale;
+
+    const gaitParamsList = gait.update(dt, newPos, bodyYaw);
+    spider.update(gaitParamsList);
+
+    // gait 타겟 시각화 노드 위치 갱신
+    for (let i = 0; i < gaitTargetNodes.length; i++) {
+        const pos = gaitParamsList[i].targetPosition;
+        console.log(`[GaitTarget${i}] World Target:`, pos);
+        gaitTargetNodes[i].transforms.user = m4.translation(pos[0], pos[1], pos[2]);
+    }
 }
 
 function render() {

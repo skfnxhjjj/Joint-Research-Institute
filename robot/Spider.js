@@ -37,13 +37,12 @@ export class Spider {
         }
     }
 
-    update(targetPosition) {
-        // Solve IK for each leg
-        this.legs.forEach(((leg, i) => {
-                leg.solveIK(targetPosition);
-            }
-        ));
-
+    update(gaitParamsList) {
+        if (Array.isArray(gaitParamsList) && gaitParamsList.length === this.legs.length) {
+            this.legs.forEach((leg, i) => {
+                leg.updateGait(gaitParamsList[i]);
+            });
+        }
         // Update transforms
         this.root.traverse(node => node.updateLocalMatrix());
         this.root.computeWorld();
