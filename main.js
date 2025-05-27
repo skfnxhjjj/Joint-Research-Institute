@@ -102,7 +102,7 @@ function initScene(gl, canvas) {
     const legBasePositions = [];
     const R = 0.9; // gait 타겟 반지름
     const stepLength = 0.15;
-    const stepHeight = 0.09;
+    const stepHeight = 0.04;
     for (let i = 0; i < 6; i++) {
         const theta = i * 2 * Math.PI / 6;
         legBasePositions.push([R * Math.cos(theta), 0, R * Math.sin(theta)]);
