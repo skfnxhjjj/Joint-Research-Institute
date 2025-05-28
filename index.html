@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <title>관절연구소</title>
     <link rel="stylesheet" href="style.css">
 
@@ -65,52 +66,56 @@
 </head>
 
 <body>
-<div id="container">
-    <canvas height="1024" id="gl-canvas" width="1024"></canvas>
-    <div id="cam">
-        <div><strong>Camera</strong></div>
-        <hr>
-        Eye:<br>
-        x: <span id="eyeX">100</span><br>
-        y: <span id="eyeY">100</span><br>
-        z: <span id="eyeZ">100</span><br>
-        <hr>
-        At:<br>
-        x: <span id="atX">0</span><br>
-        y: <span id="atY">0</span><br>
-        z: <span id="atZ">0</span><br>
-        <hr>
-        Up:<br>
-        x: <span id="upX">0</span><br>
-        y: <span id="upY">1</span><br>
-        z: <span id="upZ">0</span><br>
+    <div id="container">
+        <canvas height="1024" id="gl-canvas" width="1024"></canvas>
+        <div id="model">
+            <div><strong>Spider</strong></div>
+            <hr>
+            Position:<br>
+            x: <span id="posX">0</span><br>
+            y: <span id="posY">0</span><br>
+            z: <span id="posZ">0</span><br>
+            <hr>
+            Rotation:<br>
+            x: <span id="rotX">0</span>°<br>
+            y: <span id="rotY">0</span>°<br>
+            z: <span id="rotZ">0</span>°<br>
+        </div>
+        <div id="controller">
+            <div><strong>Controller</strong></div>
+            <hr>
+            Position:<br>
+            x: <span id="controllerX">0.00</span><br>
+            y: <span id="controllerY">0.00</span><br>
+            z: <span id="controllerZ">0.00</span><br>
+        </div>
+        <div id="debugPanel">
+            <div><strong>Leg Joints Debug Info</strong></div>
+            <hr>
+            CoxaJoint:<br>
+            <span id="coxaX">0.00</span>,
+            <span id="coxaY">0.00</span>,
+            <span id="coxaZ">0.00</span><br>
+            yaw: <span id="coxaR">0</span>°<br>
+            <hr>
+            FemurJoint:<br>
+            <span id="femurX">0.00</span>,
+            <span id="femurY">0.00</span>,
+            <span id="femurZ">0.00</span><br>
+            roll: <span id="femurR">0</span>°<br>
+            <hr>
+            TibiaJoint:<br>
+            <span id="tibiaX">0.00</span>,
+            <span id="tibiaY">0.00</span>,
+            <span id="tibiaZ">0.00</span><br>
+            roll: <span id="tibiaR">0</span>°<br>
+            <hr>
+            Foot:<br>
+            <span id="footX">0.00</span>,
+            <span id="footY">0.00</span>,
+            <span id="footZ">0.00</span><br>
+        </div>
     </div>
-    <div id="model">
-        <div><strong>Spider</strong></div>
-        <hr>
-        Position:<br>
-        x: <span id="posX">0</span><br>
-        y: <span id="posY">0</span><br>
-        z: <span id="posZ">0</span><br>
-        <hr>
-        Scale:<br>
-        x: <span id="scaleX">1</span><br>
-        y: <span id="scaleY">1</span><br>
-        z: <span id="scaleZ">1</span><br>
-        <hr>
-        Rotation:<br>
-        x: <span id="rotX">0</span><br>
-        y: <span id="rotY">0</span><br>
-        z: <span id="rotZ">0</span><br>
-    </div>
-    <div id="controller">
-        <div><strong>Controller</strong></div>
-        <hr>
-        Position:<br>
-        x: <span id="controllerX">0.00</span><br>
-        y: <span id="controllerY">0.00</span><br>
-        z: <span id="controllerZ">0.00</span><br>
-    </div>
-</div>
 </body>
+
 </html>

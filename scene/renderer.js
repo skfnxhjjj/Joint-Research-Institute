@@ -52,10 +52,10 @@ export function initRenderer(gl, eye, at) {
     window.addEventListener("resize", resize);
     resize();
 
-    return {viewMatrix, projectionMatrix};
+    return { viewMatrix, projectionMatrix };
 }
 
-export function renderScene(gl, scene) {
+export function renderScene(gl, root) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(meshProgramInfo.program);
@@ -68,16 +68,26 @@ export function renderScene(gl, scene) {
 
     gl.enable(gl.DEPTH_TEST);
 
-    for (const mesh of scene.meshes) {
-        gl.useProgram(meshProgramInfo.program);
-        let worldMatrix = mesh.transform || m4.identity();
-        gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, worldMatrix);
-        bindAttrib(gl, mesh.buffers.position, meshProgramInfo.attribLocations.a_position, 3);
-        bindAttrib(gl, mesh.buffers.normal, meshProgramInfo.attribLocations.a_normal, 3);
-        bindAttrib(gl, mesh.buffers.texcoord, meshProgramInfo.attribLocations.a_texcoord, 2);
-        bindAttrib(gl, mesh.buffers.color, meshProgramInfo.attribLocations.a_color, 3);
+    renderNode(gl, root);
+}
 
-        gl.drawArrays(gl.TRIANGLES, 0, mesh.numElements);
+function renderNode(gl, node) {
+    if (node.mesh) {
+        gl.useProgram(meshProgramInfo.program);
+        gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, node.worldMatrix);
+        const buf = node.mesh.buffers;
+        bindAttrib(gl, buf.position, meshProgramInfo.attribLocations.a_position, 3);
+        bindAttrib(gl, buf.normal, meshProgramInfo.attribLocations.a_normal, 3);
+        if (buf.texcoord) {
+            bindAttrib(gl, buf.texcoord, meshProgramInfo.attribLocations.a_texcoord, 2);
+        } else {
+            gl.disableVertexAttribArray(meshProgramInfo.attribLocations.a_texcoord);
+        }
+        bindAttrib(gl, buf.color, meshProgramInfo.attribLocations.a_color, 4);
+        gl.drawArrays(gl.TRIANGLES, 0, node.mesh.numElements);
+    }
+    for (const child of node.children) {
+        renderNode(gl, child);
     }
 }
 

@@ -15,15 +15,19 @@ Joint-Research-Institute/
 │   ├── objParser.js         # OBJ 파서
 │   └── webgl-utils.js       # WebGL 환경 설정
 ├── scene/                   # 씬 구성 / 렌더링 처리
-│   ├── renderer.js          # 렌더링 루프
-│   └── worldInit.js         # 지형 초기화
+│   ├── renderer.js          # 렌더링 루프 및 셰이더 관리
+│   ├── worldInit.js         # 지형 초기화
+│   └── SceneNode.js         # 씬 그래프 노드 구현
 ├── robot/                   # 로봇 관련 로직
-│   ├── gait.js              # 애니메이션
-│   ├── ik.js                # IK
-│   └── robot.js             # 로봇 계층 구조
+│   ├── Spider.js            # 거미 로봇 메인 클래스
+│   ├── Leg.js               # 로봇 다리 구현
+│   ├── Joint.js             # 관절 구현
+│   ├── robotConfig.js       # 로봇 설정
+│   └── gait.js              # 보행 패턴
 ├── utils/                   # 기타 유틸
 │   ├── modelLoader.js       # .obj 로드
-│   └── raycast.js           # 마우스 레이캐스트
+│   ├── raycast.js           # 마우스 레이캐스트
+│   └── meshUtils.js         # 메시 생성 유틸리티
 ├── index.html               # HTML 진입점
 ├── main.js                  # 프로그램 메인 초기화 / 실행 루프
 ├── style.css                # 스타일
