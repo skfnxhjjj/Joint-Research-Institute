@@ -44,6 +44,19 @@ export class Leg {
             mesh: tibiaMesh
         });
 
+        // Decorations
+        this.femurShell = new SceneNode({
+            name: `${name}_femurArm`,
+            mesh: createBoxMesh(gl, robotConfig.leg.femur.shell.size, robotConfig.leg.femur.shell.color)
+        });
+        this.femurShell.transforms.base = m4.translation(0, 0.05, -0.05);
+
+        this.tibiaShell = new SceneNode({
+            name: `${name}_tibiaShell`,
+            mesh: createBoxMesh(gl, robotConfig.leg.tibia.shell.size, robotConfig.leg.tibia.shell.color)
+        });
+        this.tibiaShell.transforms.base = m4.translation(0, 0.05, -0.05);
+
         this.footEnd = new Joint({
             name: `${name}_footEnd`,
             offset: [0, robotConfig.leg.tibia.size[1], 0]
@@ -55,10 +68,12 @@ export class Leg {
         this.coxaJoint._parent = this.legRoot;
         this.coxaJoint.addChild(this.coxaSegment);
         this.coxaSegment.addChild(this.femurJoint);
+        this.femurSegment.addChild(this.femurShell);
         this.femurJoint.addChild(this.femurSegment);
         this.femurSegment.addChild(this.tibiaJoint);
         this.tibiaJoint.addChild(this.tibiaSegment);
         this.tibiaSegment.addChild(this.footEnd);
+        this.tibiaSegment.addChild(this.tibiaShell);
 
         this.rootNode = this.legRoot;
     }

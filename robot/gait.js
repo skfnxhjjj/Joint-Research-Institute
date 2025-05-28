@@ -44,7 +44,6 @@ export class TripodGait {
         for (let i = 0; i < numLegs; i++) {
             const footNode = new SceneNode({
                 name: `foot_${i}`,
-                mesh: createBoxMesh(this.gl, [0., 0., 0.], [1, 1, 0])
             });
 
             const initialPos = this.calculateInitialFootPosition(i);
@@ -59,7 +58,6 @@ export class TripodGait {
         for (let i = 0; i < numLegs; i++) {
             const footTargetNode = new SceneNode({
                 name: `footTarget_${i}`,
-                mesh: createBoxMesh(this.gl, [0., 0., 0.], [0, 1, 1])
             });
 
             const initialPos = this.calculateInitialFootPosition(i);

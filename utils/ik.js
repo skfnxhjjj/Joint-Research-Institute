@@ -15,7 +15,7 @@ export function solveLegIK(coxaJoint, femurJoint, tibiaJoint, targetWorldPos) {
     let y = footLocal[1] - 0.3;
 
     const femurLen = robotConfig.leg.femur.size[1];
-    const tibiaLen = robotConfig.leg.tibia.size[1] - 0.1;
+    const tibiaLen = robotConfig.leg.tibia.size[1];
     let dist = Math.sqrt(z * z + y * y);
     const maxReach = femurLen + tibiaLen;
     let clampedDist = Math.min(dist, maxReach);

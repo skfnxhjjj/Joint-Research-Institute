@@ -71,15 +71,14 @@
         <div id="model">
             <div><strong>Spider</strong></div>
             <hr>
-            Position:<br>
+            Transform:<br>
             x: <span id="posX">0</span><br>
             y: <span id="posY">0</span><br>
             z: <span id="posZ">0</span><br>
+            yaw: <span id="yaw">0</span>°<br>
             <hr>
-            Rotation:<br>
-            x: <span id="rotX">0</span>°<br>
-            y: <span id="rotY">0</span>°<br>
-            z: <span id="rotZ">0</span>°<br>
+            Spider Height: <span id="groundHeightValue">0.5</span><br>
+            <input type="range" id="groundHeightSlider" min="0" max="0.7" step="0.1" value="0.5">
         </div>
         <div id="controller">
             <div><strong>Controller</strong></div>
@@ -90,7 +89,7 @@
             z: <span id="controllerZ">0.00</span><br>
         </div>
         <div id="debugPanel">
-            <div><strong>Leg Joints Debug Info</strong></div>
+            <div><strong>Leg0 Joints Debug Info</strong></div>
             <hr>
             CoxaJoint:<br>
             <span id="coxaX">0.00</span>,

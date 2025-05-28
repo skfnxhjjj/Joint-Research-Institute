@@ -8,9 +8,9 @@ export class Spider {
         this.gl = gl;
 
         // 현재 위치와 회전 상태
-        this.currentPosition = [0, .5, 0]; // 현재 위치 (y는 고정)
+        this.currentPosition = [0, robotConfig.body.groundHeight, 0]; // 현재 위치 (y는 고정)
         this.currentRotation = 0; // 현재 Y축 회전 (라디안)
-        this.targetPosition = [0, .5, 0]; // 목표 위치
+        this.targetPosition = [0, robotConfig.body.groundHeight, 0]; // 목표 위치
         this.targetRotation = 0; // 목표 회전
 
         // Create root node
@@ -24,6 +24,23 @@ export class Spider {
             mesh: createBoxMesh(gl, robotConfig.body.size, robotConfig.body.color)
         });
         this.root.addChild(this.body);
+
+        // Decorations
+        this.eye = new SceneNode({
+            name: "eye",
+            mesh: createBoxMesh(gl, robotConfig.eye.size, robotConfig.eye.color)
+        });
+        this.body.addChild(this.eye);
+        this.eye.transforms.base = m4.translation(0,
+            0.1,
+            robotConfig.body.size[2] / 2);
+
+        this.bodyShell = new SceneNode({
+            name: "bodyShell",
+            mesh: createBoxMesh(gl, robotConfig.body.shell.size, robotConfig.body.shell.color)
+        });
+        this.body.addChild(this.bodyShell);
+        this.bodyShell.transforms.base = m4.translation(0, .15, 0);
 
         // Initialize legs
         this.legs = [];
@@ -68,7 +85,7 @@ export class Spider {
         const [cx, cy, cz] = controllerPosition;
 
         // 목표 위치 설정 (y는 고정)
-        this.targetPosition = [cx, , cz];
+        this.targetPosition = [cx, robotConfig.body.groundHeight, cz];
 
         // 현재 위치에서 목표 위치로의 방향 벡터 계산
         const direction = [
@@ -95,7 +112,7 @@ export class Spider {
             const rotationDiff = Math.abs(this.targetRotation - this.currentRotation);
             const normalizedRotDiff = Math.min(rotationDiff, 2 * Math.PI - rotationDiff);
 
-            if (normalizedRotDiff < Math.PI / 4) { // 회전했으면 이동 시작
+            if (normalizedRotDiff < Math.PI / 8) { // 회전했으면 이동 시작
                 this.updatePosition(deltaTime, direction);
             }
         }

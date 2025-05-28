@@ -1,26 +1,39 @@
 export const robotConfig = {
     body: {
-        size: [.5, .3, .7],
-        color: [1, 1, 1]
+        size: [.5, .3, .9],
+        color: [.2, .2, .2],
+        shell: {
+            size: [.6, .2, .95],
+            color: [1, 1, 1]
+        },
+        // 로봇이 지면에서 떠있는 높이
+        groundHeight: 0.7
     },
     leg: {
         coxa: {
             size: [.1, .3, .1],
-            color: [1, 1, 1],
-            jointLimit: { min: -Math.PI / 4, max: Math.PI / 4 }
+            color: [.2, .2, .2],
         },
         femur: {
             size: [.1, .5, .1],
-            color: [1, 1, 1],
-            jointLimit: { min: -Math.PI / 3, max: Math.PI / 3 }
+            color: [.2, .2, .2],
+            shell: {
+                size: [.2, .4, .1],
+                color: [1, 1, 1]
+            }
         },
         tibia: {
             size: [.1, .7, .1],
-            color: [1, 1, 1],
-            jointLimit: { min: -Math.PI / 2, max: Math.PI / 6 }
+            color: [.2, .2, .2],
+            shell: {
+                size: [.2, .45, .1],
+                color: [1, 1, 1]
+            }
         },
-        swingSpeed: 1.8,
-        stepHeight: 0.35
+    },
+    eye: {
+        size: [.1, .1, .1],
+        color: [1, 0, 0]
     },
     gait: {
         // foot과 footTarget 사이의 최대 허용 거리

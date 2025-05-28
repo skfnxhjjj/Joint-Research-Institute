@@ -7,6 +7,7 @@ import { createBoxMesh } from './utils/meshUtils.js';
 import { Spider } from "./robot/Spider.js";
 import { SceneNode } from "./scene/SceneNode.js";
 import { TripodGait } from "./robot/gait.js";
+import { robotConfig } from "./robot/robotConfig.js";
 
 let gl;
 const eye = [5, 5, 5];
@@ -82,7 +83,7 @@ function initScene(gl, canvas) {
 }
 
 function userControl(canvas, groundMesh, controllerNode) {
-    canvas.addEventListener("mousemove", e => {
+    canvas.addEventListener("click", e => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -96,6 +97,21 @@ function userControl(canvas, groundMesh, controllerNode) {
             controllerNode.transforms.user = m4.translation(cx, cy, cz);
         }
     });
+
+    // Ground height slider control
+    const groundHeightSlider = document.getElementById('groundHeightSlider');
+    const groundHeightValue = document.getElementById('groundHeightValue');
+
+    groundHeightSlider.addEventListener('input', (e) => {
+        const newHeight = parseFloat(e.target.value);
+        robotConfig.body.groundHeight = newHeight;
+        groundHeightValue.textContent = newHeight.toFixed(1);
+
+        // Update spider's current and target positions
+        spider.currentPosition[1] = newHeight;
+        spider.targetPosition[1] = newHeight;
+        spider.updateTransform();
+    });
 }
 
 function updatePanel() {
@@ -103,6 +119,10 @@ function updatePanel() {
     document.getElementById('posX').textContent = spiderPos[0].toFixed(2);
     document.getElementById('posY').textContent = spiderPos[1].toFixed(2);
     document.getElementById('posZ').textContent = spiderPos[2].toFixed(2);
+
+    // Update robot yaw value
+    const yawDegrees = (spider.currentRotation * 180 / Math.PI).toFixed(1);
+    document.getElementById('yaw').textContent = yawDegrees;
 
     const leg = spider.legs[0];
     const names = ['coxa', 'femur', 'tibia'];
@@ -144,21 +164,6 @@ function update() {
     if (gait && controllerNode) {
         const controllerPosition = controllerNode.getWorldPosition();
         gait.update(deltaTime, controllerPosition);
-
-        // Debug logging (uncomment if needed)
-        /*
-        debugLogTime += deltaTime;
-        if (debugLogTime > 1.0) {
-            debugLogTime = 0;
-            const gaitStatus = gait.getLegStates();
-            console.log("=== GAIT STATUS ===");
-            console.log(`Plan: ${gaitStatus.gaitPlan.currentPlan?.id || 'none'} (${gaitStatus.gaitPlan.currentPlan?.group || 'none'}), Queue: ${gaitStatus.gaitPlan.queueLength}, Active: ${gaitStatus.gaitPlan.activeGroup || 'none'}`);
-            gaitStatus.legs.forEach(state => {
-                console.log(`Leg ${state.legIndex} (${state.group}): Phase=${state.phase}, Ground=${state.isGround}, Lerping=${state.isLerping}, CanStart=${state.canStartLerp}, Progress=${(state.lerpProgress * 100).toFixed(1)}%`);
-            });
-            console.log("==================");
-        }
-        */
     }
 
     spider.update(controllerNode, deltaTime);
