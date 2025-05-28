@@ -28,8 +28,8 @@ export class Spider {
             const leg = new Leg(gl, `leg${i + 1}`, meshConfigsPerLeg[i] || {});
             // 기준 위치/방향은 legRoot에만 적용
             leg.legRoot.transforms.base = m4.multiply(
-                m4.translation(0, 0, 0),
-                m4.zRotation(0)
+                m4.translation(0, 0, 0.15),
+                m4.xRotation(Math.PI / 4)
             )
             // coxaJoint에는 base transform 적용하지 않음 (identity)
             this.root.addChild(leg.rootNode);
@@ -37,7 +37,7 @@ export class Spider {
         }
 
         // root 지면에서 띄우기
-        this.root.transforms.base = m4.translation(0, 0, 0);
+        this.root.transforms.base = m4.translation(0, .5, 0);
     }
 
     update(controllerNode) {
@@ -46,8 +46,10 @@ export class Spider {
 
         // Solve IK for each leg (각도만 갱신)
         this.legs.forEach(((leg, i) => {
-            leg.solveIK([cx, cy, cz]);
+            leg.solveIK([0, 0, 0]);
         }
         ));
+
+        this.root.transforms.user = m4.translation(cx, cy, cz);
     }
 }

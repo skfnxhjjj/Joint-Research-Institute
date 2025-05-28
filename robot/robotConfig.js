@@ -1,6 +1,6 @@
 export const robotConfig = {
     body: {
-        size: [.1, .1, .1],
+        size: [.7, .3, .5],
         color: [1, 1, 1]
     },
     leg: {
