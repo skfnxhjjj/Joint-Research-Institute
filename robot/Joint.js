@@ -3,10 +3,10 @@ import { SceneNode } from '/scene/SceneNode.js';
 export class Joint extends SceneNode {
     constructor({
         name,
-        axis = [0, 1, 0], // 회전축(옵션)
+        axis = [0, 1, 0],
         min = -Math.PI,
         max = Math.PI,
-        offset = [0, 0, 0], // 관절의 기준 위치
+        offset = [0, 0, 0],
         mesh = null
     }) {
         super({ name, mesh });
@@ -14,9 +14,7 @@ export class Joint extends SceneNode {
         this.min = min;
         this.max = max;
 
-        // offset을 base transform에 적용
         this.transforms.base = m4.translation(...offset);
-        // 각 transform(gait, ik, user)는 identity로 초기화
         this.transforms.gait = m4.identity();
         this.transforms.ik = m4.identity();
         this.transforms.user = m4.identity();
@@ -30,7 +28,6 @@ export class Joint extends SceneNode {
     }
 
     updateLocalMatrix() {
-        // user * ik * gait * base 순서로 누적 곱
         this.localMatrix = m4.multiply(
             this.transforms.base,
             m4.multiply(
