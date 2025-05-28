@@ -165,17 +165,18 @@ function update() {
         debugLogTime += deltaTime;
         if (debugLogTime > 1.0) {
             debugLogTime = 0;
-            const legStates = gait.getLegStates();
+            const gaitStatus = gait.getLegStates();
             console.log("=== GAIT STATUS ===");
-            legStates.forEach(state => {
-                console.log(`Leg ${state.legIndex}: Ground=${state.isGround}, Lerping=${state.isLerping}, CanStart=${state.canStartLerp}, Progress=${(state.lerpProgress * 100).toFixed(1)}%`);
+            console.log(`Plan: ${gaitStatus.gaitPlan.currentPlan?.id || 'none'} (${gaitStatus.gaitPlan.currentPlan?.group || 'none'}), Queue: ${gaitStatus.gaitPlan.queueLength}, Active: ${gaitStatus.gaitPlan.activeGroup || 'none'}`);
+            gaitStatus.legs.forEach(state => {
+                console.log(`Leg ${state.legIndex} (${state.group}): Phase=${state.phase}, Ground=${state.isGround}, Lerping=${state.isLerping}, CanStart=${state.canStartLerp}, Progress=${(state.lerpProgress * 100).toFixed(1)}%`);
             });
             console.log("==================");
         }
     }
 
     // 3. spider.update(controllerNode)에서 solveIK로 각도 갱신 (worldMatrix 갱신 X)
-    spider.update(controllerNode);
+    spider.update(controllerNode, deltaTime);
 
     // 4. spider 트리의 localMatrix만 갱신 (worldMatrix는 sceneRootNode에서 다시 갱신)
     spider.root.traverse(node => node.updateLocalMatrix());

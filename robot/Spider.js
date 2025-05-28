@@ -6,6 +6,13 @@ import { robotConfig } from "./robotConfig.js";
 export class Spider {
     constructor(gl, numLegs = 6, meshConfigsPerLeg = []) {
         this.gl = gl;
+
+        // 현재 위치와 회전 상태
+        this.currentPosition = [0, .5, 0]; // 현재 위치 (y는 고정)
+        this.currentRotation = 0; // 현재 Y축 회전 (라디안)
+        this.targetPosition = [0, .5, 0]; // 목표 위치
+        this.targetRotation = 0; // 목표 회전
+
         // Create root node
         this.root = new SceneNode({
             name: "spiderRoot",
@@ -23,28 +30,78 @@ export class Spider {
         const R = robotConfig.body.radius || (robotConfig.body.size[2] / 2);
         for (let i = 0; i < numLegs; i++) {
             const [x, , z] = robotConfig.body.size;
+            const d = 0.05;
             const legPosition = [
-                [x / 2, 0, z / 2],
-                [x / 2, 0, 0],
-                [x / 2, 0, -z / 2],
-                [-x / 2, 0, z / 2],
-                [-x / 2, 0, 0],
-                [-x / 2, 0, -z / 2]
+                [x / 2 - d, 0, z / 2 - d],
+                [x / 2 - d, 0, 0],
+                [x / 2 - d, 0, -z / 2 + d],
+                [-x / 2 + d, 0, z / 2 - d],
+                [-x / 2 + d, 0, 0],
+                [-x / 2 + d, 0, -z / 2 + d]
             ]
+
+            // coxa 관절을 양 옆으로 벌리기 위한 회전각 정의
+            const coxaRotations = [
+                -Math.PI / 6,    // leg 0 (우전): 30도 외향
+                -Math.PI / 4,    // leg 1 (좌전): 45도 외향  
+                -Math.PI / 6,    // leg 2 (우중): 30도 외향
+                Math.PI / 6,   // leg 3 (좌후): -30도 외향
+                Math.PI / 4,   // leg 4 (우중): -45도 외향
+                Math.PI / 6    // leg 5 (좌후): -30도 외향
+            ];
+
             const leg = new Leg(gl, `leg${i}`, meshConfigsPerLeg[i] || {});
-            // 기준 위치/방향은 legRoot에만 적용
-            leg.legRoot.transforms.base = m4.translation(...legPosition[i])
+
+            // 기준 위치와 회전을 legRoot에 적용
+            const translation = m4.translation(...legPosition[i]);
+            const rotation = m4.zRotation(coxaRotations[i]);
+            leg.legRoot.transforms.base = m4.multiply(translation, rotation);
+
             this.root.addChild(leg.rootNode);
             this.legs.push(leg);
         }
-
-        // root 지면에서 띄우기
-        this.root.transforms.base = m4.translation(0, .5, 0);
+        this.updateTransform();
     }
 
-    update(controllerNode) {
+    update(controllerNode, deltaTime) {
         const controllerPosition = controllerNode.getWorldPosition();
         const [cx, cy, cz] = controllerPosition;
+
+        // 목표 위치 설정 (y는 고정)
+        this.targetPosition = [cx, , cz];
+
+        // 현재 위치에서 목표 위치로의 방향 벡터 계산
+        const direction = [
+            this.targetPosition[0] - this.currentPosition[0],
+            0,
+            this.targetPosition[2] - this.currentPosition[2]
+        ];
+
+        const distance = Math.sqrt(direction[0] * direction[0] + direction[2] * direction[2]);
+
+        // 목표 지점에 도달했는지 확인
+        if (distance > robotConfig.movement.arrivalThreshold) {
+            // 방향 정규화
+            direction[0] /= distance;
+            direction[2] /= distance;
+
+            // 목표 회전각 계산 (Z축이 앞 방향)
+            this.targetRotation = Math.atan2(direction[0], direction[2]);
+
+            // 부드러운 회전
+            this.updateRotation(deltaTime);
+
+            // 부드러운 이동 (회전이 어느 정도 완료되면)
+            const rotationDiff = Math.abs(this.targetRotation - this.currentRotation);
+            const normalizedRotDiff = Math.min(rotationDiff, 2 * Math.PI - rotationDiff);
+
+            if (normalizedRotDiff < Math.PI / 4) { // 회전했으면 이동 시작
+                this.updatePosition(deltaTime, direction);
+            }
+        }
+
+        // transform 업데이트
+        this.updateTransform();
 
         // Solve IK for each leg (각도만 갱신)
         this.legs.forEach(((leg, i) => {
@@ -62,7 +119,36 @@ export class Spider {
             }
         }
         ));
+    }
 
-        this.root.transforms.user = m4.translation(cx, cy, cz);
+    updateRotation(deltaTime) {
+        const rotationDiff = this.targetRotation - this.currentRotation;
+
+        // 최단 회전 경로 계산 (-π ~ π 범위로 정규화)
+        let normalizedDiff = rotationDiff;
+        while (normalizedDiff > Math.PI) normalizedDiff -= 2 * Math.PI;
+        while (normalizedDiff < -Math.PI) normalizedDiff += 2 * Math.PI;
+
+        // 부드러운 회전
+        const maxRotationStep = robotConfig.movement.turnSpeed * deltaTime;
+        const rotationStep = Math.sign(normalizedDiff) * Math.min(Math.abs(normalizedDiff), maxRotationStep);
+
+        this.currentRotation += rotationStep;
+
+        // 회전각을 0 ~ 2π 범위로 정규화
+        while (this.currentRotation < 0) this.currentRotation += 2 * Math.PI;
+        while (this.currentRotation >= 2 * Math.PI) this.currentRotation -= 2 * Math.PI;
+    }
+
+    updatePosition(deltaTime, direction) {
+        const moveStep = robotConfig.movement.walkSpeed * deltaTime;
+
+        this.currentPosition[0] += direction[0] * moveStep;
+        this.currentPosition[2] += direction[2] * moveStep;
+    }
+
+    updateTransform() {
+        this.root.transforms.base = m4.translation(...this.currentPosition);
+        this.root.transforms.user = m4.yRotation(this.currentRotation);
     }
 }
