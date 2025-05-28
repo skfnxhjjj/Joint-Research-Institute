@@ -22,16 +22,18 @@ export class Spider {
         this.legs = [];
         const R = robotConfig.body.radius || (robotConfig.body.size[2] / 2);
         for (let i = 0; i < numLegs; i++) {
-            const theta = i * 2 * Math.PI / numLegs;
-            const x = R * Math.cos(theta);
-            const z = R * Math.sin(theta);
-            const leg = new Leg(gl, `leg${i + 1}`, meshConfigsPerLeg[i] || {});
+            const [x, , z] = robotConfig.body.size;
+            const legPosition = [
+                [x / 2, 0, z / 2],
+                [x / 2, 0, 0],
+                [x / 2, 0, -z / 2],
+                [-x / 2, 0, z / 2],
+                [-x / 2, 0, 0],
+                [-x / 2, 0, -z / 2]
+            ]
+            const leg = new Leg(gl, `leg${i}`, meshConfigsPerLeg[i] || {});
             // 기준 위치/방향은 legRoot에만 적용
-            leg.legRoot.transforms.base = m4.multiply(
-                m4.translation(0, 0, 0.15),
-                m4.xRotation(Math.PI / 4)
-            )
-            // coxaJoint에는 base transform 적용하지 않음 (identity)
+            leg.legRoot.transforms.base = m4.translation(...legPosition[i])
             this.root.addChild(leg.rootNode);
             this.legs.push(leg);
         }
@@ -46,7 +48,18 @@ export class Spider {
 
         // Solve IK for each leg (각도만 갱신)
         this.legs.forEach(((leg, i) => {
-            leg.solveIK([0, 0, 0]);
+            // leg.foot가 있으면 그 위치를 IK 타겟으로 사용
+            if (leg.foot) {
+                const footPosition = leg.foot.getWorldPosition();
+                // spider의 로컬 좌표계로 변환
+                const spiderWorldMatrix = this.root.worldMatrix;
+                const spiderInverseMatrix = m4.inverse(spiderWorldMatrix);
+                const localFootPosition = m4.transformPoint(spiderInverseMatrix, footPosition);
+                leg.solveIK(footPosition);
+            } else {
+                // 기본 IK 타겟
+                leg.solveIK([0, 0, 0]);
+            }
         }
         ));
 

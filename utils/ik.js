@@ -37,7 +37,6 @@ export function solveLegIK(coxaJoint, femurJoint, tibiaJoint, targetWorldPos) {
         z *= scale;
         y *= scale;
         dist = clampedDist;
-        console.warn('[IK] Target out of reach.');
     }
 
     // 디버그: two bone IK의 시작점, 끝점, 입력값 등
