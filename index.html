@@ -47,7 +47,7 @@
             fNormal = mat3(uWorld) * a_normal;
             fTexCoord = a_texcoord;
             fColor = a_color;
-            // shadow map 좌표 계산
+
             vShadowCoord = uLightProjection * uLightView * worldPosition;
             gl_Position = uProjection * uView * worldPosition;
             gl_PointSize = 10.0;
@@ -64,9 +64,10 @@
         uniform vec3 uLightDirection;
         uniform vec4 uDiffuse;
         uniform vec3 uAmbient;
-        // shadow map
+
         uniform sampler2D uShadowMap;
         uniform float uShadowBias;
+        uniform int uReceiveShadow;
         void main() {
             vec3 normal = normalize(fNormal);
             float light = dot(normal, normalize(uLightDirection));
@@ -75,13 +76,16 @@
             vec3 ambientTerm = uAmbient;
             vec3 lit = diffuseTerm + ambientTerm;
             vec3 color = fColor * lit;
-            // shadow map 샘플링
-            vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;
-            shadowCoord = shadowCoord * 0.5 + 0.5;
             float shadow = 1.0;
-            if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0) {
-                float depth = texture2D(uShadowMap, shadowCoord.xy).r;
-                if (shadowCoord.z - uShadowBias > depth) shadow = 0.5;
+            if (uReceiveShadow == 1) {
+                vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;
+                shadowCoord = shadowCoord * 0.5 + 0.5;
+                if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0) {
+                    float depth = texture2D(uShadowMap, shadowCoord.xy).r;
+                    float cosTheta = clamp(dot(normal, normalize(uLightDirection)), 0.0, 1.0);
+                    float bias = max(uShadowBias * (1.0 - cosTheta), uShadowBias * 0.5);
+                    if (shadowCoord.z - bias > depth) shadow = 0.5;
+                }
             }
             gl_FragColor = vec4(color * shadow, uDiffuse.a);
         }

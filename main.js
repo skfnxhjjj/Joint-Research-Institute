@@ -232,106 +232,93 @@ function update() {
     sceneRootNode.computeWorld();
 }
 
-// 디버그: shadow map을 화면에 그리기 위한 함수
-function drawShadowMapDebug(gl, shadowTexture) {
-    // WebGL로 quad를 그려서 shadowTexture를 시각화
-    // 별도의 2D quad용 프로그램/버퍼를 생성해서 사용
-    if (!drawShadowMapDebug.program) {
-        // 간단한 quad vertex/fragment shader 생성
-        const vsSource = `
-            attribute vec2 aPosition;
-            varying vec2 vTexCoord;
-            void main() {
-                vTexCoord = aPosition * 0.5 + 0.5;
-                gl_Position = vec4(aPosition, 0, 1);
-            }
-        `;
-        const fsSource = `
-            precision mediump float;
-            varying vec2 vTexCoord;
-            uniform sampler2D uTexture;
-            void main() {
-                float d = texture2D(uTexture, vTexCoord).r;
-                gl_FragColor = vec4(d, d, d, 1.0);
-            }
-        `;
-        function compileShader(gl, src, type) {
-            const s = gl.createShader(type);
-            gl.shaderSource(s, src);
-            gl.compileShader(s);
-            return s;
-        }
-        const vs = compileShader(gl, vsSource, gl.VERTEX_SHADER);
-        const fs = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
-        const prog = gl.createProgram();
-        gl.attachShader(prog, vs);
-        gl.attachShader(prog, fs);
-        gl.linkProgram(prog);
-        drawShadowMapDebug.program = prog;
-        drawShadowMapDebug.aPosition = gl.getAttribLocation(prog, 'aPosition');
-        drawShadowMapDebug.uTexture = gl.getUniformLocation(prog, 'uTexture');
-        // fullscreen quad
-        drawShadowMapDebug.buffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, drawShadowMapDebug.buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            -1, -1, 1, -1, -1, 1, 1, 1
-        ]), gl.STATIC_DRAW);
-    }
-    // viewport를 우측 하단 작은 사각형으로 설정
-    const size = 200;
-    gl.viewport(gl.drawingBufferWidth - size, 0, size, size);
-    gl.useProgram(drawShadowMapDebug.program);
-    gl.bindBuffer(gl.ARRAY_BUFFER, drawShadowMapDebug.buffer);
-    gl.enableVertexAttribArray(drawShadowMapDebug.aPosition);
-    gl.vertexAttribPointer(drawShadowMapDebug.aPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, shadowTexture);
-    gl.uniform1i(drawShadowMapDebug.uTexture, 0);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    // viewport 원래대로 복구는 renderScene에서 다시 설정됨
-}
+// function drawShadowMapDebug(gl, shadowTexture) {
+//     if (!drawShadowMapDebug.program) {
+//         const vsSource = `
+//             attribute vec2 aPosition;
+//             varying vec2 vTexCoord;
+//             void main() {
+//                 vTexCoord = aPosition * 0.5 + 0.5;
+//                 gl_Position = vec4(aPosition, 0, 1);
+//             }
+//         `;
+//         const fsSource = `
+//             precision mediump float;
+//             varying vec2 vTexCoord;
+//             uniform sampler2D uTexture;
+//             void main() {
+//                 float d = texture2D(uTexture, vTexCoord).r;
+//                 gl_FragColor = vec4(d, d, d, 1.0);
+//             }
+//         `;
+//         function compileShader(gl, src, type) {
+//             const s = gl.createShader(type);
+//             gl.shaderSource(s, src);
+//             gl.compileShader(s);
+//             return s;
+//         }
+//         const vs = compileShader(gl, vsSource, gl.VERTEX_SHADER);
+//         const fs = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
+//         const prog = gl.createProgram();
+//         gl.attachShader(prog, vs);
+//         gl.attachShader(prog, fs);
+//         gl.linkProgram(prog);
+//         drawShadowMapDebug.program = prog;
+//         drawShadowMapDebug.aPosition = gl.getAttribLocation(prog, 'aPosition');
+//         drawShadowMapDebug.uTexture = gl.getUniformLocation(prog, 'uTexture');
+//         // fullscreen quad
+//         drawShadowMapDebug.buffer = gl.createBuffer();
+//         gl.bindBuffer(gl.ARRAY_BUFFER, drawShadowMapDebug.buffer);
+//         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+//             -1, -1, 1, -1, -1, 1, 1, 1
+//         ]), gl.STATIC_DRAW);
+//     }
+//     // viewport를 우측 하단 작은 사각형으로 설정
+//     const size = 200;
+//     gl.viewport(gl.drawingBufferWidth - size, 0, size, size);
+//     gl.useProgram(drawShadowMapDebug.program);
+//     gl.bindBuffer(gl.ARRAY_BUFFER, drawShadowMapDebug.buffer);
+//     gl.enableVertexAttribArray(drawShadowMapDebug.aPosition);
+//     gl.vertexAttribPointer(drawShadowMapDebug.aPosition, 2, gl.FLOAT, false, 0, 0);
+//     gl.activeTexture(gl.TEXTURE0);
+//     gl.bindTexture(gl.TEXTURE_2D, shadowTexture);
+//     gl.uniform1i(drawShadowMapDebug.uTexture, 0);
+//     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+//     // viewport 원래대로 복구는 renderScene에서 다시 설정됨
+// }
 
 function render() {
     update();
-    // 1. Shadow map pass (light 시점에서 spider만 렌더)
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFramebuffer);
     gl.viewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
     gl.clearColor(1, 1, 1, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.disable(gl.CULL_FACE); // 반드시 culling 끄기!
+    gl.disable(gl.CULL_FACE);
     renderSpiderForShadow(gl, spiderRootNode, lightViewMatrix, lightProjectionMatrix);
-    gl.enable(gl.CULL_FACE); // main pass에서는 다시 켜기
+    gl.enable(gl.CULL_FACE);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    // 2. Main pass (camera 시점에서 전체 scene 렌더, groundMesh에 shadow map 적용)
+    // camera 시점에서 전체 scene 렌더, groundMesh에 shadow map 적용
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     renderScene(gl, sceneRootNode, {
         shadowTexture,
         lightViewMatrix,
         lightProjectionMatrix,
-        shadowBias: 0.01 // bias를 낮춤
+        shadowBias: 0.006
     });
 
-    // 디버그: spider, ground의 world 좌표 출력
-    if (spiderRootNode && typeof spiderRootNode.getWorldPosition === 'function') {
-        const spiderPos = spiderRootNode.getWorldPosition();
-    }
-    if (sceneRootNode && sceneRootNode.children) {
-        const groundNode = sceneRootNode.children.find(child => child.name === 'ground');
-        if (groundNode && typeof groundNode.getWorldPosition === 'function') {
-            const groundPos = groundNode.getWorldPosition();
-        }
-    }
 
-    // 디버그: shadow map을 화면에 시각화
-    drawShadowMapDebug(gl, shadowTexture);
+    // shadow map 시각화
+    // drawShadowMapDebug(gl, shadowTexture);
+
+
     updatePanel();
     requestAnimationFrame(render);
 }
 
-// spider만 shadow map용으로 렌더하는 함수 (간단히 rootNode만 렌더)
+// spider shadow map으로 렌더
 function renderSpiderForShadow(gl, rootNode, lightView, lightProj) {
-    // sceneRootNode 전체를 렌더해서 spider와 ground 모두 shadow map에 찍히는지 실험
     renderScene(gl, sceneRootNode, {
         shadowPass: true,
         lightViewMatrix: lightView,

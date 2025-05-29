@@ -152,6 +152,7 @@ function renderNodeWithStack(gl, node, options = {}) {
             const uLightView = gl.getUniformLocation(meshProgramInfo.program, 'uLightView');
             const uLightProjection = gl.getUniformLocation(meshProgramInfo.program, 'uLightProjection');
             const uShadowBias = gl.getUniformLocation(meshProgramInfo.program, 'uShadowBias');
+            const uReceiveShadow = gl.getUniformLocation(meshProgramInfo.program, 'uReceiveShadow');
             gl.activeTexture(gl.TEXTURE1);
             gl.bindTexture(gl.TEXTURE_2D, options.shadowTexture);
             gl.uniform1i(uShadowMap, 1);
@@ -160,6 +161,11 @@ function renderNodeWithStack(gl, node, options = {}) {
             if (uShadowBias && options.shadowBias !== undefined) {
                 gl.uniform1f(uShadowBias, options.shadowBias);
             }
+            if (uReceiveShadow) gl.uniform1i(uReceiveShadow, 1);
+        } else {
+            // ground가 아니면 shadow map uniform은 넘기지 않고, uReceiveShadow=0만 전달
+            const uReceiveShadow = gl.getUniformLocation(meshProgramInfo.program, 'uReceiveShadow');
+            if (uReceiveShadow) gl.uniform1i(uReceiveShadow, 0);
         }
 
         const buf = node.mesh.buffers;
