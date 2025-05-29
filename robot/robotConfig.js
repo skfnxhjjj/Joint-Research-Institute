@@ -35,6 +35,24 @@ export const robotConfig = {
         size: [.1, .1, .1],
         color: [1, 0, 0]
     },
+    debug: {
+        controller: {
+            size: [.1, .1, .1],
+            color: [1, 0, 0]
+        },
+        spiderRoot: {
+            size: [.1, .1, .1],
+            color: [0, 0, 1]
+        },
+        foot: {
+            size: [.1, .1, .1],
+            color: [1, 1, 0]
+        },
+        footTarget: {
+            size: [.1, .1, .1],
+            color: [0, 1, 1]
+        },
+    },
     gait: {
         // foot과 footTarget 사이의 최대 허용 거리
         maxFootDistance: 0.3,

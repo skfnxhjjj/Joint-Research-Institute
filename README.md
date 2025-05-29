@@ -26,26 +26,26 @@ Joint-Research-Institute/
 │       └── spider.obj
 ├── common/                  # 공통 유틸리티
 │   ├── initShaders.js       # 셰이더 초기화
-│   ├── m4.js                # 행렬 연산 라이브러리
+│   ├── m4.js                # 행렬 연산
 │   ├── objParser.js         # OBJ 파일 파서
-│   └── webgl-utils.js       # WebGL 환경 설정
-├── scene/                   # 씬 구성 / 렌더링 처리
-│   ├── renderer.js          # 렌더링 루프 및 셰이더 관리
+│   └── webgl-utils.js       # WebGL 유틸리티
+├── scene/                   # 씬 구성 / 렌더 처리
+│   ├── renderer.js          # 렌더 루프 및 셰이더 관리
 │   ├── worldInit.js         # 지형 초기화
-│   └── SceneNode.js         # 씬 그래프 노드 구현
+│   └── SceneNode.js         # 씬 그래프 노드
 ├── robot/                   # 로봇 관련 로직
 │   ├── Spider.js            # 거미 로봇 메인 클래스
 │   ├── Leg.js               # 로봇 다리 구현
 │   ├── Joint.js             # 관절 구현
 │   ├── robotConfig.js       # 로봇 설정 및 파라미터
-│   └── gait.js              # Tripod Gait 보행 패턴
+│   └── gait.js              # Tripod Gait
 ├── utils/                   # 기타 유틸리티
-│   ├── ik.js                # 역운동학(IK) 솔버
+│   ├── ik.js                # IK 솔버
 │   ├── meshUtils.js         # 메시 생성 유틸리티
 │   ├── modelLoader.js       # .obj 모델 로더
-│   └── raycast.js           # 마우스 레이캐스트
+│   └── raycast.js           # 레이캐스트
 ├── index.html               # HTML 진입점
-├── main.js                  # 프로그램 메인 초기화 / 실행 루프
-├── style.css                # 스타일시트
+├── main.js                  # 프로그램 초기화 / 실행 루프
+├── style.css                
 └── README.md                # 프로젝트 문서
 ```

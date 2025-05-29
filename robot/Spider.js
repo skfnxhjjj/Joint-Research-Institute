@@ -13,15 +13,25 @@ export class Spider {
         this.targetPosition = [0, robotConfig.body.groundHeight, 0]; // 목표 위치
         this.targetRotation = 0; // 목표 회전
 
-        // Create root node
+        // Create root node (no mesh)
         this.root = new SceneNode({
-            name: "spiderRoot",
-            mesh: createBoxMesh(gl, [.1, .1, .1], [1, 1, 0])
+            name: "spiderRoot"
         });
+
+        // Create debug node for spider root
+        const spiderRootDebugMesh = createBoxMesh(gl, robotConfig.debug.spiderRoot.size, robotConfig.debug.spiderRoot.color);
+        this.debugRootNode = new SceneNode({
+            name: "spiderRootDebug",
+            mesh: spiderRootDebugMesh,
+            visible: true
+        });
+        this.root.addChild(this.debugRootNode);
+
         // Body node
+        const bodyMesh = createBoxMesh(gl, robotConfig.body.size, robotConfig.body.color);
         this.body = new SceneNode({
             name: "body",
-            mesh: createBoxMesh(gl, robotConfig.body.size, robotConfig.body.color)
+            mesh: bodyMesh
         });
         this.root.addChild(this.body);
 
@@ -57,14 +67,13 @@ export class Spider {
                 [-x / 2 + d, 0, -z / 2 + d]
             ]
 
-            // coxa 관절을 양 옆으로 벌리기 위한 회전각 정의
             const coxaRotations = [
-                -Math.PI / 6,    // leg 0 (우전): 30도 외향
-                -Math.PI / 4,    // leg 1 (좌전): 45도 외향  
-                -Math.PI / 6,    // leg 2 (우중): 30도 외향
-                Math.PI / 6,   // leg 3 (좌후): -30도 외향
-                Math.PI / 4,   // leg 4 (우중): -45도 외향
-                Math.PI / 6    // leg 5 (좌후): -30도 외향
+                -Math.PI / 4,
+                -Math.PI / 3,
+                -Math.PI / 4,
+                Math.PI / 4,
+                Math.PI / 3,
+                Math.PI / 4
             ];
 
             const leg = new Leg(gl, `leg${i}`, meshConfigsPerLeg[i] || {});

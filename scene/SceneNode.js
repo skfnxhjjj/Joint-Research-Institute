@@ -3,13 +3,15 @@ export class SceneNode {
         name,
         mesh = null,
         localMatrix = m4.identity(),
-        children = []
+        children = [],
+        visible = true
     }) {
         this.name = name;
         this.mesh = mesh;
         this.localMatrix = localMatrix;
         this.worldMatrix = m4.identity();
         this.children = children;
+        this.visible = visible;
         this.transforms = {
             base: m4.identity(),
             gait: m4.identity(),

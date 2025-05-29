@@ -25,7 +25,8 @@ let spider;
 let spiderRootNode;
 let gait;
 let lastTime = 0;
-let debugLogTime = 0;
+
+let debugMode = true;
 
 window.onload = async function () {
     try {
@@ -66,7 +67,7 @@ function initScene(gl, canvas) {
     spider = new Spider(gl, 6);
     spiderRootNode = spider.root;
 
-    const controllerMesh = createBoxMesh(gl, [.1, .1, .1], [1, 0, 1]);
+    const controllerMesh = createBoxMesh(gl, robotConfig.debug.controller.size, robotConfig.debug.controller.color);
     controllerNode = new SceneNode({
         name: "controller",
         mesh: controllerMesh
@@ -78,6 +79,8 @@ function initScene(gl, canvas) {
 
     gait = new TripodGait(gl, spider);
     gait.addNodesToScene(sceneRootNode, spiderRootNode);
+
+    setDebugVisibility(debugMode);
 
     userControl(canvas, groundMesh, controllerNode);
 }
@@ -98,7 +101,6 @@ function userControl(canvas, groundMesh, controllerNode) {
         }
     });
 
-    // Ground height slider control
     const groundHeightSlider = document.getElementById('groundHeightSlider');
     const groundHeightValue = document.getElementById('groundHeightValue');
 
@@ -112,6 +114,32 @@ function userControl(canvas, groundMesh, controllerNode) {
         spider.targetPosition[1] = newHeight;
         spider.updateTransform();
     });
+
+    const debugToggle = document.getElementById('debugToggle');
+    debugToggle.addEventListener('change', (e) => {
+        debugMode = e.target.checked;
+        setDebugVisibility(debugMode);
+        console.log("Debug mode:", debugMode ? "enabled" : "disabled");
+    });
+}
+
+function setDebugVisibility(visible) {
+    if (controllerNode) {
+        controllerNode.visible = visible;
+    }
+
+    if (spider && spider.debugRootNode) {
+        spider.debugRootNode.visible = visible;
+    }
+
+    if (gait) {
+        gait.footNodes.forEach(footNode => {
+            footNode.visible = visible;
+        });
+        gait.footTargetNodes.forEach(footTargetNode => {
+            footTargetNode.visible = visible;
+        });
+    }
 }
 
 function updatePanel() {

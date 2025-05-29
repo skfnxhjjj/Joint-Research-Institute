@@ -44,6 +44,8 @@ export class TripodGait {
         for (let i = 0; i < numLegs; i++) {
             const footNode = new SceneNode({
                 name: `foot_${i}`,
+                mesh: createBoxMesh(this.gl, robotConfig.debug.foot.size, robotConfig.debug.foot.color),
+                visible: true
             });
 
             const initialPos = this.calculateInitialFootPosition(i);
@@ -58,6 +60,8 @@ export class TripodGait {
         for (let i = 0; i < numLegs; i++) {
             const footTargetNode = new SceneNode({
                 name: `footTarget_${i}`,
+                mesh: createBoxMesh(this.gl, robotConfig.debug.footTarget.size, robotConfig.debug.footTarget.color),
+                visible: true
             });
 
             const initialPos = this.calculateInitialFootPosition(i);
@@ -71,12 +75,12 @@ export class TripodGait {
         const [x, , z] = robotConfig.body.size;
 
         const footPosition = [
-            [x, 0, z],
-            [x * 1.5, 0, 0],
-            [x, 0, -z],
-            [-x, 0, z],
-            [-x * 1.5, 0, 0],
-            [-x, 0, -z]
+            [x, 0, z - 0.1],
+            [x * 1.8, 0, 0.1],
+            [x, 0, -z + 0.2],
+            [-x, 0, z - 0.1],
+            [-x * 1.8, 0, 0.1],
+            [-x, 0, -z + 0.2]
         ]
 
         return footPosition[legIndex];
@@ -287,7 +291,7 @@ export class TripodGait {
         const x = startOffset[0] + (endOffset[0] - startOffset[0]) * t;
         const z = startOffset[2] + (endOffset[2] - startOffset[2]) * t;
 
-        const heightCurve = 4 * t * (1 - t); // Parabolic curve
+        const heightCurve = 4 * t * (1 - t);
         const baseY = startOffset[1] + (endOffset[1] - startOffset[1]) * t;
         const y = baseY + robotConfig.gait.stepHeight * heightCurve;
 

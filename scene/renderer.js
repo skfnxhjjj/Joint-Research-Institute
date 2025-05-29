@@ -2,6 +2,9 @@ let meshProgramInfo;
 let viewMatrix;
 let projectionMatrix;
 
+// Matrix stack for hierarchical rendering
+let matrixStack = [];
+
 export function initRenderer(gl, eye, at) {
     const program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
@@ -55,6 +58,26 @@ export function initRenderer(gl, eye, at) {
     return { viewMatrix, projectionMatrix };
 }
 
+// Matrix stack operations
+function pushMatrix(matrix) {
+    matrixStack.push(m4.copy(matrix));
+}
+
+function popMatrix() {
+    if (matrixStack.length === 0) {
+        console.warn("Matrix stack underflow!");
+        return m4.identity();
+    }
+    return matrixStack.pop();
+}
+
+function getCurrentMatrix() {
+    if (matrixStack.length === 0) {
+        return m4.identity();
+    }
+    return matrixStack[matrixStack.length - 1];
+}
+
 export function renderScene(gl, root) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -68,10 +91,55 @@ export function renderScene(gl, root) {
 
     gl.enable(gl.DEPTH_TEST);
 
-    renderNode(gl, root);
+    // Initialize matrix stack with identity matrix
+    matrixStack = [];
+    pushMatrix(m4.identity());
+
+    // Render the scene using matrix stack
+    renderNodeWithStack(gl, root);
 }
 
-function renderNode(gl, node) {
+function renderNodeWithStack(gl, node) {
+    // Skip rendering if node is not visible
+    if (!node.visible) {
+        return;
+    }
+
+    // Save current matrix state
+    const currentMatrix = getCurrentMatrix();
+
+    // Apply this node's local transformation
+    const nodeMatrix = m4.multiply(currentMatrix, node.localMatrix);
+    pushMatrix(nodeMatrix);
+
+    // Render this node's mesh if it exists
+    if (node.mesh) {
+        gl.useProgram(meshProgramInfo.program);
+        gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, nodeMatrix);
+
+        const buf = node.mesh.buffers;
+        bindAttrib(gl, buf.position, meshProgramInfo.attribLocations.a_position, 3);
+        bindAttrib(gl, buf.normal, meshProgramInfo.attribLocations.a_normal, 3);
+        if (buf.texcoord) {
+            bindAttrib(gl, buf.texcoord, meshProgramInfo.attribLocations.a_texcoord, 2);
+        } else {
+            gl.disableVertexAttribArray(meshProgramInfo.attribLocations.a_texcoord);
+        }
+        bindAttrib(gl, buf.color, meshProgramInfo.attribLocations.a_color, 4);
+        gl.drawArrays(gl.TRIANGLES, 0, node.mesh.numElements);
+    }
+
+    // Render all children
+    for (const child of node.children) {
+        renderNodeWithStack(gl, child);
+    }
+
+    // Restore previous matrix state
+    popMatrix();
+}
+
+// Original renderNode function for backward compatibility
+/* function renderNode(gl, node) {
     if (node.mesh) {
         gl.useProgram(meshProgramInfo.program);
         gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, node.worldMatrix);
@@ -89,7 +157,7 @@ function renderNode(gl, node) {
     for (const child of node.children) {
         renderNode(gl, child);
     }
-}
+} */
 
 function bindAttrib(gl, buffer, attrib, size) {
     if (buffer && attrib >= 0) {
