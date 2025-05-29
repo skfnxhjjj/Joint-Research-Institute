@@ -1,6 +1,7 @@
 let meshProgramInfo;
 let viewMatrix;
 let projectionMatrix;
+let shadowProgramInfo;
 
 // Matrix stack for hierarchical rendering
 let matrixStack = [];
@@ -12,10 +13,10 @@ export function initRenderer(gl, eye, at) {
     meshProgramInfo = {
         program,
         attribLocations: {
-            a_position: gl.getAttribLocation(program, "vPosition"),
-            a_normal: gl.getAttribLocation(program, "vNormal"),
-            a_texcoord: gl.getAttribLocation(program, "vTexCoord"),
-            a_color: gl.getAttribLocation(program, "vColor"),
+            a_position: gl.getAttribLocation(program, "a_position"),
+            a_normal: gl.getAttribLocation(program, "a_normal"),
+            a_texcoord: gl.getAttribLocation(program, "a_texcoord"),
+            a_color: gl.getAttribLocation(program, "a_color"),
         },
         uniformLocations: {
             u_world: gl.getUniformLocation(program, "uWorld"),
@@ -24,6 +25,20 @@ export function initRenderer(gl, eye, at) {
             u_lightDirection: gl.getUniformLocation(program, "uLightDirection"),
             u_diffuse: gl.getUniformLocation(program, "uDiffuse"),
             u_ambient: gl.getUniformLocation(program, "uAmbient"),
+        },
+    };
+
+    // shadow 전용 shader 프로그램 준비 (shader는 추후 추가)
+    const shadowProgram = initShaders(gl, "shadow-vertex-shader", "shadow-fragment-shader");
+    shadowProgramInfo = {
+        program: shadowProgram,
+        attribLocations: {
+            a_position: gl.getAttribLocation(shadowProgram, "a_position"),
+        },
+        uniformLocations: {
+            u_world: gl.getUniformLocation(shadowProgram, "uWorld"),
+            u_view: gl.getUniformLocation(shadowProgram, "uView"),
+            u_projection: gl.getUniformLocation(shadowProgram, "uProjection"),
         },
     };
 
@@ -78,7 +93,20 @@ function getCurrentMatrix() {
     return matrixStack[matrixStack.length - 1];
 }
 
-export function renderScene(gl, root) {
+export function renderScene(gl, root, options = {}) {
+    const shadowPass = options.shadowPass;
+    if (shadowPass) {
+        // shadow 전용 shader 사용
+        gl.useProgram(shadowProgramInfo.program);
+        // light view/proj matrix 전달
+        gl.uniformMatrix4fv(shadowProgramInfo.uniformLocations.u_view, false, options.lightViewMatrix);
+        gl.uniformMatrix4fv(shadowProgramInfo.uniformLocations.u_projection, false, options.lightProjectionMatrix);
+        gl.enable(gl.DEPTH_TEST);
+        matrixStack = [];
+        pushMatrix(m4.identity());
+        renderNodeForShadow(gl, root);
+        return;
+    }
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(meshProgramInfo.program);
@@ -96,10 +124,10 @@ export function renderScene(gl, root) {
     pushMatrix(m4.identity());
 
     // Render the scene using matrix stack
-    renderNodeWithStack(gl, root);
+    renderNodeWithStack(gl, root, options);
 }
 
-function renderNodeWithStack(gl, node) {
+function renderNodeWithStack(gl, node, options = {}) {
     // Skip rendering if node is not visible
     if (!node.visible) {
         return;
@@ -117,6 +145,23 @@ function renderNodeWithStack(gl, node) {
         gl.useProgram(meshProgramInfo.program);
         gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, nodeMatrix);
 
+        // groundMesh일 때만 shadow map uniform 전달
+        if (node.name === 'ground' && options.shadowTexture) {
+            // shadow map 관련 uniform 전달
+            const uShadowMap = gl.getUniformLocation(meshProgramInfo.program, 'uShadowMap');
+            const uLightView = gl.getUniformLocation(meshProgramInfo.program, 'uLightView');
+            const uLightProjection = gl.getUniformLocation(meshProgramInfo.program, 'uLightProjection');
+            const uShadowBias = gl.getUniformLocation(meshProgramInfo.program, 'uShadowBias');
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, options.shadowTexture);
+            gl.uniform1i(uShadowMap, 1);
+            gl.uniformMatrix4fv(uLightView, false, options.lightViewMatrix);
+            gl.uniformMatrix4fv(uLightProjection, false, options.lightProjectionMatrix);
+            if (uShadowBias && options.shadowBias !== undefined) {
+                gl.uniform1f(uShadowBias, options.shadowBias);
+            }
+        }
+
         const buf = node.mesh.buffers;
         bindAttrib(gl, buf.position, meshProgramInfo.attribLocations.a_position, 3);
         bindAttrib(gl, buf.normal, meshProgramInfo.attribLocations.a_normal, 3);
@@ -131,33 +176,34 @@ function renderNodeWithStack(gl, node) {
 
     // Render all children
     for (const child of node.children) {
-        renderNodeWithStack(gl, child);
+        renderNodeWithStack(gl, child, options);
     }
 
     // Restore previous matrix state
     popMatrix();
 }
 
-// Original renderNode function for backward compatibility
-/* function renderNode(gl, node) {
+function renderNodeForShadow(gl, node) {
+    if (!node.visible) return;
+    const currentMatrix = getCurrentMatrix();
+    const nodeMatrix = m4.multiply(currentMatrix, node.localMatrix);
+    pushMatrix(nodeMatrix);
     if (node.mesh) {
-        gl.useProgram(meshProgramInfo.program);
-        gl.uniformMatrix4fv(meshProgramInfo.uniformLocations.u_world, false, node.worldMatrix);
-        const buf = node.mesh.buffers;
-        bindAttrib(gl, buf.position, meshProgramInfo.attribLocations.a_position, 3);
-        bindAttrib(gl, buf.normal, meshProgramInfo.attribLocations.a_normal, 3);
-        if (buf.texcoord) {
-            bindAttrib(gl, buf.texcoord, meshProgramInfo.attribLocations.a_texcoord, 2);
-        } else {
-            gl.disableVertexAttribArray(meshProgramInfo.attribLocations.a_texcoord);
+        if (node.name === 'ground') {
+            console.log('shadow pass: drawing ground');
         }
-        bindAttrib(gl, buf.color, meshProgramInfo.attribLocations.a_color, 4);
+        gl.useProgram(shadowProgramInfo.program);
+        gl.uniformMatrix4fv(shadowProgramInfo.uniformLocations.u_world, false, nodeMatrix);
+        // light view/proj matrix는 renderScene에서 이미 설정됨
+        const buf = node.mesh.buffers;
+        bindAttrib(gl, buf.position, shadowProgramInfo.attribLocations.a_position, 3);
         gl.drawArrays(gl.TRIANGLES, 0, node.mesh.numElements);
     }
     for (const child of node.children) {
-        renderNode(gl, child);
+        renderNodeForShadow(gl, child);
     }
-} */
+    popMatrix();
+}
 
 function bindAttrib(gl, buffer, attrib, size) {
     if (buffer && attrib >= 0) {

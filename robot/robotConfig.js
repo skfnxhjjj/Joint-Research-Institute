@@ -7,7 +7,7 @@ export const robotConfig = {
             color: [1, 1, 1]
         },
         // 로봇이 지면에서 떠있는 높이
-        groundHeight: 0.7
+        groundHeight: 1.0
     },
     leg: {
         coxa: {

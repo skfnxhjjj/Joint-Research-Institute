@@ -6,27 +6,49 @@
     <title>관절연구소</title>
     <link rel="stylesheet" href="style.css">
 
-    <script id="vertex-shader" type="x-shader/x-vertex">
-        attribute vec3 vPosition;
-        attribute vec3 vNormal;
-        attribute vec2 vTexCoord;
-        attribute vec3 vColor;
-
+    <script id="shadow-vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 a_position;
         uniform mat4 uWorld;
         uniform mat4 uView;
         uniform mat4 uProjection;
+        void main() {
+            gl_Position = uProjection * uView * uWorld * vec4(a_position, 1.0);
+        }
+    </script>
 
+    <script id="shadow-fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        void main() {
+            float depth = gl_FragCoord.z;
+            // gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+            gl_FragColor = vec4(depth, depth, depth, 1.0);
+        }
+    </script>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 a_position;
+        attribute vec3 a_normal;
+        attribute vec2 a_texcoord;
+        attribute vec3 a_color;
+        uniform mat4 uWorld;
+        uniform mat4 uView;
+        uniform mat4 uProjection;
+        // shadow map용
+        uniform mat4 uLightView;
+        uniform mat4 uLightProjection;
         varying vec3 fNormal;
         varying vec3 fPosition;
         varying vec2 fTexCoord;
         varying vec3 fColor;
-
+        varying vec4 vShadowCoord;
         void main() {
-            vec4 worldPosition = uWorld * vec4(vPosition, 1.0);
+            vec4 worldPosition = uWorld * vec4(a_position, 1.0);
             fPosition = worldPosition.xyz;
-            fNormal = mat3(uWorld) * vNormal;
-            fTexCoord = vTexCoord;
-            fColor = vColor;
+            fNormal = mat3(uWorld) * a_normal;
+            fTexCoord = a_texcoord;
+            fColor = a_color;
+            // shadow map 좌표 계산
+            vShadowCoord = uLightProjection * uLightView * worldPosition;
             gl_Position = uProjection * uView * worldPosition;
             gl_PointSize = 10.0;
         }
@@ -34,28 +56,34 @@
 
     <script id="fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
-
         varying vec3 fNormal;
         varying vec3 fPosition;
         varying vec2 fTexCoord;
         varying vec3 fColor;
-
+        varying vec4 vShadowCoord;
         uniform vec3 uLightDirection;
         uniform vec4 uDiffuse;
         uniform vec3 uAmbient;
-
+        // shadow map
+        uniform sampler2D uShadowMap;
+        uniform float uShadowBias;
         void main() {
             vec3 normal = normalize(fNormal);
             float light = dot(normal, normalize(uLightDirection));
             light = max(light, 0.0);
-
             vec3 diffuseTerm = light * uDiffuse.rgb;
             vec3 ambientTerm = uAmbient;
             vec3 lit = diffuseTerm + ambientTerm;
-
             vec3 color = fColor * lit;
-      
-            gl_FragColor = vec4(color, uDiffuse.a);
+            // shadow map 샘플링
+            vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;
+            shadowCoord = shadowCoord * 0.5 + 0.5;
+            float shadow = 1.0;
+            if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0) {
+                float depth = texture2D(uShadowMap, shadowCoord.xy).r;
+                if (shadowCoord.z - uShadowBias > depth) shadow = 0.5;
+            }
+            gl_FragColor = vec4(color * shadow, uDiffuse.a);
         }
     </script>
 

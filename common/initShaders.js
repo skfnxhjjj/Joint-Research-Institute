@@ -19,6 +19,7 @@ function initShaders( gl, vertexShaderId, fragmentShaderId )
         if ( !gl.getShaderParameter(vertShdr, gl.COMPILE_STATUS) ) {
             var msg = "Vertex shader failed to compile.  The error log is:"
         	+ "<pre>" + gl.getShaderInfoLog( vertShdr ) + "</pre>";
+            console.log(msg);
             alert( msg );
             return -1;
         }

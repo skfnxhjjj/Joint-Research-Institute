@@ -73,14 +73,15 @@ export class TripodGait {
 
     calculateInitialFootPosition(legIndex) {
         const [x, , z] = robotConfig.body.size;
+        const footPositionHeight = 0.5;
 
         const footPosition = [
-            [x, 0, z - 0.1],
-            [x * 1.8, 0, 0.1],
-            [x, 0, -z + 0.2],
-            [-x, 0, z - 0.1],
-            [-x * 1.8, 0, 0.1],
-            [-x, 0, -z + 0.2]
+            [x, footPositionHeight, z - 0.1],
+            [x * 1.8, footPositionHeight, 0.1],
+            [x, footPositionHeight, -z + 0.2],
+            [-x, footPositionHeight, z - 0.1],
+            [-x * 1.8, footPositionHeight, 0.1],
+            [-x, footPositionHeight, -z + 0.2]
         ]
 
         return footPosition[legIndex];
@@ -267,11 +268,12 @@ export class TripodGait {
 
         const currentGaitMatrix = footNode.transforms.gait;
         const currentOffset = [currentGaitMatrix[12], currentGaitMatrix[13], currentGaitMatrix[14]];
+        const groundHeight = 0.5;
 
         const initialPos = this.calculateInitialFootPosition(legIndex);
         const targetOffset = [
             targetPos[0] - initialPos[0],
-            0 - initialPos[1],
+            groundHeight - initialPos[1],
             targetPos[2] - initialPos[2]
         ];
 

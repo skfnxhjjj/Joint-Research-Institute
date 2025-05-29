@@ -55,16 +55,17 @@ export class Spider {
         // Initialize legs
         this.legs = [];
         const R = robotConfig.body.radius || (robotConfig.body.size[2] / 2);
+        const initLegHeight = 0;
         for (let i = 0; i < numLegs; i++) {
             const [x, , z] = robotConfig.body.size;
             const d = 0.05;
             const legPosition = [
-                [x / 2 - d, 0, z / 2 - d],
-                [x / 2 - d, 0, 0],
-                [x / 2 - d, 0, -z / 2 + d],
-                [-x / 2 + d, 0, z / 2 - d],
-                [-x / 2 + d, 0, 0],
-                [-x / 2 + d, 0, -z / 2 + d]
+                [x / 2 - d, initLegHeight, z / 2 - d],
+                [x / 2 - d, initLegHeight, 0],
+                [x / 2 - d, initLegHeight, -z / 2 + d],
+                [-x / 2 + d, initLegHeight, z / 2 - d],
+                [-x / 2 + d, initLegHeight, 0],
+                [-x / 2 + d, initLegHeight, -z / 2 + d]
             ]
 
             const coxaRotations = [
