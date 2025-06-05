@@ -15,11 +15,13 @@ export function raycast(gl, x, y, viewMatrix, projectionMatrix, ground) {
     // Ray direction
     const dir = m4.normalize(m4.subtractVectors(far, near));
     const origin = near;
+    const groundHeight = 0.5;
 
     // Intersect with horizontal ground plane (y = groundY)
-    const groundY = ground.transform
-        ? ground.transform[13]  // extract translate Y
-        : 0;
+    // const groundY = ground.transform
+    //     ? ground.transform[13]  // extract translate Y
+    //     : 0;
+    const groundY = groundHeight;
     const t = (groundY - origin[1]) / dir[1];
     if (t <= 0) {
         return null;

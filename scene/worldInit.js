@@ -3,6 +3,8 @@ export function createGround(gl, size, divisions) {
     const colors = [];
     const normals = [];
 
+    const groundHeight = 0.5;
+
     for (let i = 0; i < divisions; i++) {
         for (let j = 0; j < divisions; j++) {
             const x0 = -size / 2 + (i / divisions) * size;
@@ -12,16 +14,16 @@ export function createGround(gl, size, divisions) {
 
             // Two triangles per cell (CCW winding order for correct facing)
             positions.push(
-                x0, 0, z0,
-                x0, 0, z1,
-                x1, 0, z0,
+                x0, groundHeight, z0,
+                x0, groundHeight, z1,
+                x1, groundHeight, z0,
 
-                x1, 0, z0,
-                x0, 0, z1,
-                x1, 0, z1
+                x1, groundHeight, z0,
+                x0, groundHeight, z1,
+                x1, groundHeight, z1
             );
 
-            const color = ((i + j) % 2 === 0) ? [1, 1, 1] : [0.8, 0.8, 0.8];
+            const color = ((i + j) % 2 === 0) ? [.6, .6, .6, 1.0] : [.8, .8, .8, 1.0];
             for (let k = 0; k < 6; k++) {
                 colors.push(...color);
                 normals.push(0, 1, 0);
