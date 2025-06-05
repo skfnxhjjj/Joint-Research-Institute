@@ -1,6 +1,9 @@
 # 관절연구소
 Computer Graphics 조별 과제 - WebGL 기반 3D 로봇 시뮬레이션
 
+<img width="264" alt="spider" src="https://github.com/user-attachments/assets/75accaec-65cc-4be9-950b-633b8183ebb3" />
+
+
 ## 프로젝트 개요
 이 프로젝트는 WebGL을 사용하여 3D 로봇 시뮬레이션을 구현한 웹 애플리케이션입니다.
 - 3D 로봇 모델링 및 렌더링
