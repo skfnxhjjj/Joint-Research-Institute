@@ -1,6 +1,8 @@
 # 관절연구소
 Computer Graphics 조별 과제 - WebGL 기반 3D 로봇 시뮬레이션
 
+[데모](https://joint-research-institute.web.app/)
+
 <img width="264" alt="spider" src="https://github.com/user-attachments/assets/75accaec-65cc-4be9-950b-633b8183ebb3" />
 
 
